@@ -22,7 +22,22 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
 ]
-dependencies = []
+dependencies = [
+    'langgraph',
+    'langchain',
+    'langchain_community',
+    'langchain_surf @ git+https://github.com/SURF-Research-Agents/langchain_surf.git',
+    'langchain_ui @ git+https://github.com/SURF-Research-Agents/langchain_ui.git',
+    'deepagents',
+    'Flask',
+    'langchain_openai',
+    'dotenv',
+    'tavily',
+    'ase',
+    'rdkit',
+    'pubchempy',
+    'pymatgen'
+]
 description = "SURF Chemistry Agents"
 keywords = ["agentic workflow chemistry"]
 license = {file = "LICENSE"}
