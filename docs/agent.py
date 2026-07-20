@@ -15,11 +15,11 @@ from sra_chem.tools.cheminformatics_tools import (
     smiles_to_atomsdata,
     smiles_to_coordinate_file
 )
+
+from sra_chem.tools.directory_tools import create_workspace
+from sra_chem.tools.pyscf_tools import ground_state_energy_local, ground_state_energy_hpc
 from sra_chem.prompts.single_agent_prompt import single_agent_prompt
 
-# file_path = pathlib.Path(__file__).parent.resolve()
-# skills_path = f"{file_path}/../src/sra_chem/skills/"
-# print(skills_path)
 skills_path = "/Users/renau001/Documents/projects/ai/SRA/sra_chem/src/sra_chem/"
 backend = FilesystemBackend(root_dir=skills_path)
 skills = ['skills/']
@@ -44,18 +44,27 @@ model = ChatWillma(
     api_key=api_key,
 )
 
-
 agent = create_deep_agent(model,
                      tools=[molecule_name_to_smiles,
                             smiles_to_atomsdata,
-                            smiles_to_coordinate_file],
+                            smiles_to_coordinate_file,
+                            ground_state_energy_local,
+                            ground_state_energy_hpc,
+                            create_workspace],
                      backend=backend,
                      skills=skills,
                      system_prompt=single_agent_prompt)
 
 
+# result = agent.invoke(
+#     {"messages": [{"role": "user", "content": "What are the atomic coordinate of cafeine?"}]},
+#     config={"callbacks": [langfuse_handler]}
+# )
+# print(result)
+
+
 result = agent.invoke(
-    {"messages": [{"role": "user", "content": "What are the atomic coordinate of cafeine?"}]},
+    {"messages": [{"role": "user", "content": "What is the ground state energy of water using sto-6g basis?"}]},
     config={"callbacks": [langfuse_handler]}
 )
-print(result)
+print(result['messages'][-1].content)

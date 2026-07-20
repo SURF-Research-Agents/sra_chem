@@ -39,7 +39,8 @@ dependencies = [
     'pymatgen',
     'langfuse',
     'gunicorn',
-    'gevent'
+    'gevent',
+    'pyscf'
 ]
 description = "SURF Chemistry Agents"
 keywords = ["agentic workflow chemistry"]

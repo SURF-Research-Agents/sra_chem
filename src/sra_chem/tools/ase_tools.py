@@ -1,3 +1,12 @@
+"""ASE (Atomic Simulation Environment) tools for computational chemistry workflows.
+
+This module provides LangChain-compatible tools for running ASE-based
+atomistic simulations including structure I/O, geometry optimization,
+vibrational analysis, thermochemistry computation, and IR spectrum
+generation. Supported calculators include EMT, TB-Lite (GFN-xTB),
+Orca, NWChem, FAIRChem, MACE, and AIMNet2.
+"""
+
 from pathlib import Path
 import os
 import time

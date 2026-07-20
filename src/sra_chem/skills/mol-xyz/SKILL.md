@@ -8,6 +8,10 @@ Transform a molecule name into a coordinate file (PDB or XYZ format) by converti
 
 ## Workflow
 
+0. **Create a workspace directory** using the `create_workspace` tool.
+   - Call `create_workspace()` to get a unique UUID directory.
+   - `cd` into the returned directory so all outputs are isolated.
+
 1. **Convert molecule name to SMILES** using the `molecule_name_to_smiles` tool.
    - Provide the molecule name as input.
    - Capture the resulting SMILES string.
@@ -15,15 +19,18 @@ Transform a molecule name into a coordinate file (PDB or XYZ format) by converti
 2. **Generate coordinate file** using the `smiles_to_coordinate_file` tool.
    - Pass the SMILES string obtained from step 1.
    - Specify the desired output format (PDB or XYZ).
+   - Use the workspace directory as the output path.
 
 ## Example
 
 **User:** "Generate a coordinate file for aspirin"
 
 **Agent:**
-1. Call `molecule_name_to_smiles` with name="aspirin" → SMILES: "CC(=O)OC1=CC=CC=C1C(=O)O"
-2. Call `smiles_to_coordinate_file` with smiles="CC(=O)OC1=CC=CC=C1C(=O)O", format="pdb"
-3. Return the generated coordinate file to the user.
+0. Call `create_workspace()` → directory: "/path/to/abc12345-def6-7890"
+1. `cd /path/to/abc12345-def6-7890`
+2. Call `molecule_name_to_smiles` with name="aspirin" → SMILES: "CC(=O)OC1=CC=CC=C1C(=O)O"
+3. Call `smiles_to_coordinate_file` with smiles="CC(=O)OC1=CC=CC=C1C(=O)O", output_file="aspirin.xyz"
+4. Return the generated coordinate file to the user.
 
 ## Notes
 

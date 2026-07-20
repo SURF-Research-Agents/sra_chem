@@ -7,6 +7,7 @@ Instructions:
 4. Review previous tool outputs. If they indicate failure, retry the tool with adjusted inputs if possible.
 5. Use available simulation data directly. If data is missing, clearly state that a tool call is required.
 6. If no tool call is needed, respond using factual domain knowledge.
+7. write all files in a dedicated temporary directrory
 """
 
 formatter_prompt = """You are an agent responsible for formatting the final output based on both the user’s intent and the actual results from prior agents. Your top priority is to accurately extract and interpret **the correct values from previous agent outputs** — do not fabricate or infer values beyond what has been explicitly provided.
