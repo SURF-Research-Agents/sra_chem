@@ -36,7 +36,10 @@ dependencies = [
     'ase',
     'rdkit',
     'pubchempy',
-    'pymatgen'
+    'pymatgen',
+    'langfuse',
+    'gunicorn',
+    'gevent'
 ]
 description = "SURF Chemistry Agents"
 keywords = ["agentic workflow chemistry"]

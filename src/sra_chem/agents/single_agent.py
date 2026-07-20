@@ -9,10 +9,14 @@ from sra_chem.tools.cheminformatics_tools import (
 )
 from sra_chem.prompts.single_agent_prompt import single_agent_prompt
 
-file_path = pathlib.Path(__file__).parent.resolve()
-skills_path = f"{file_path}../skills/"
+# file_path = pathlib.Path(__file__).parent.resolve()
+# skills_path = f"{file_path}../skills/"
+# backend = FilesystemBackend(root_dir=skills_path)
+# skills = [skills_path]
+
+skills_path = "/Users/renau001/Documents/projects/ai/SRA/sra_chem/src/sra_chem/"
 backend = FilesystemBackend(root_dir=skills_path)
-skills = [skills_path]
+skills = ['skills/']
 
 def create_chem_agent(
     api_key: str,
