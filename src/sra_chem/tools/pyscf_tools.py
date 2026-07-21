@@ -81,6 +81,9 @@ def ground_state_energy_local(
     return _ground_state_energy(molecule_coordinate_filename, basis)
 
 
+from dotenv import load_dotenv
+load_dotenv(dotenv_path="/Users/renau001/Documents/projects/ai/SRA/.env")
+
 hpc_opt = {
     'slurm_data': {
         "url": "https://slurm.snellius.surf.nl",

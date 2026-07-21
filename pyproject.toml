@@ -40,7 +40,8 @@ dependencies = [
     'langfuse',
     'gunicorn',
     'gevent',
-    'pyscf'
+    'pyscf',
+    'awscli'
 ]
 description = "SURF Chemistry Agents"
 keywords = ["agentic workflow chemistry"]

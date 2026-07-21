@@ -64,7 +64,7 @@ agent = create_deep_agent(model,
 
 
 result = agent.invoke(
-    {"messages": [{"role": "user", "content": "What is the ground state energy of water using sto-6g basis? Use HPC method"}]},
+    {"messages": [{"role": "user", "content": "What is the ground state energy of water? Use HPC method"}]},
     config={"callbacks": [langfuse_handler]}
 )
 print(result['messages'][-1].content)

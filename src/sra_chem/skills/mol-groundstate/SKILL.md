@@ -24,7 +24,7 @@ Compute the ground state energy of a molecule using PySCF RHF by converting the 
 3. **Compute ground state energy** using the appropriate tool based on molecule size.
    - For **small molecules** (up to ~10-20 atoms), use `ground_state_energy_local`.
    - For **large molecules** (more than ~10-20 atoms), use `ground_state_energy_hpc` to submit to a SLURM cluster.
-   - Pass the coordinate file path from step 2 as `molecule_coordinate_filename`.
+   - Pass the coordinate file path from step 2 as `molecule_coordinate_filename`. Use relative path
    - Optionally specify a `basis` set (default: `"sto-3g"`).
    - The tool returns the RHF convergence value (ground state energy in Hartree).
 
