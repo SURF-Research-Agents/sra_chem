@@ -1,5 +1,6 @@
 import os
 import uuid
+from datetime import datetime
 
 from langchain_core.tools import tool
 
@@ -18,6 +19,7 @@ def create_workspace() -> dict:
     >>> create_workspace()
     {'path': '/current/working/dir/abc12345-def6-7890-abcd-ef1234567890'}
     """
-    new_dir = os.path.join(os.getcwd(), f"sra_chem_{str(uuid.uuid4())}")
+    dir_name = str(datetime.now()).replace('.',':').replace(' ','_')
+    new_dir = os.path.join(os.getcwd(), f"sra_chem_{dir_name}")
     os.makedirs(new_dir, exist_ok=True)
     return {"path": os.path.abspath(new_dir)}

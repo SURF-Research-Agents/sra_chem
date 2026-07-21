@@ -2,12 +2,18 @@ from typing import Any, List
 import pathlib
 from deepagents.backends.filesystem import FilesystemBackend
 from langchain_ui.agents.agent import create_willma_agent
+
+
 from sra_chem.tools.cheminformatics_tools import (
     molecule_name_to_smiles,
     smiles_to_atomsdata,
     smiles_to_coordinate_file
 )
+
+from sra_chem.tools.directory_tools import create_workspace
+from sra_chem.tools.pyscf_tools import ground_state_energy_local, ground_state_energy_hpc
 from sra_chem.prompts.single_agent_prompt import single_agent_prompt
+
 
 # file_path = pathlib.Path(__file__).parent.resolve()
 # skills_path = f"{file_path}../skills/"
@@ -34,7 +40,10 @@ def create_chem_agent(
         timeout=timeout,
         tools=[molecule_name_to_smiles,
                smiles_to_atomsdata,
-               smiles_to_coordinate_file],
+               smiles_to_coordinate_file,
+               ground_state_energy_local,
+               ground_state_energy_hpc,
+               create_workspace],
         instructions=single_agent_prompt,
         backend=backend,
         skills=skills

@@ -87,7 +87,7 @@ hpc_opt = {
         "api_ver": "v0.0.43",
         "user_name": os.getenv('SLURM_USER'),
         "slurm_jwt": os.getenv("SLURM_JWT"),
-    }
+    },
 }
 
 @hpc_tools(hpc=hpc_opt)
