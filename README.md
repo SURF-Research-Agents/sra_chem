@@ -1,23 +1,18 @@
-## Badges
-
-(Customize these badges with your own links, and check https://shields.io/ or https://badgen.net/ to see which other badges are available.)
-
-| fair-software.eu recommendations | |
-| :-- | :--  |
-| (1/5) code repository              | [![github repo badge](https://img.shields.io/badge/github-repo-000.svg?logo=github&labelColor=gray&color=blue)](https://github.com/surf-research-agents/sra_chem) |
-| (2/5) license                      | [![github license badge](https://img.shields.io/github/license/surf-research-agents/sra_chem)](https://github.com/surf-research-agents/sra_chem) |
-| (3/5) community registry           | [![RSD](https://img.shields.io/badge/rsd-sra_chem-00a3e3.svg)](https://www.research-software.nl/software/sra_chem) [![workflow pypi badge](https://img.shields.io/pypi/v/sra_chem.svg?colorB=blue)](https://pypi.python.org/project/sra_chem/) |
-| (4/5) citation                     | |
-| (5/5) checklist                    | [![workflow cii badge](https://bestpractices.coreinfrastructure.org/projects/<replace-with-created-project-identifier>/badge)](https://bestpractices.coreinfrastructure.org/projects/<replace-with-created-project-identifier>) |
-| howfairis                          | [![fair-software badge](https://img.shields.io/badge/fair--software.eu-%E2%97%8F%20%20%E2%97%8F%20%20%E2%97%8F%20%20%E2%97%8F%20%20%E2%97%8B-yellow)](https://fair-software.eu) |
-| **Other best practices**           | &nbsp; |
-| **GitHub Actions**                 | &nbsp; |
-| Build                              | [![build](https://github.com/surf-research-agents/sra_chem/actions/workflows/build.yml/badge.svg)](https://github.com/surf-research-agents/sra_chem/actions/workflows/build.yml) |
 ## How to use sra_chem
 
-SURF Chemistry Agents
+SURF Chemistry Agents — A multi-agent system for computational chemistry.
 
-The project setup is documented in [project_setup.md](project_setup.md). Feel free to remove this document (and/or the link to this document) if you don't need it.
+The project setup is documented in [project_setup.md](project_setup.md).
+
+### Agent Architecture
+
+This project provides a multi-agent system for computational chemistry workflows:
+
+| Agent | Description | Key Tools |
+|-------|-------------|-----------|
+| **Chemoinformatics Agent** | Molecular representation & structure generation | SMILES conversion, 3D structure generation, coordinate file creation |
+| **Quantum Chemistry Agent** | Electronic structure calculations | Hartree-Fock energies (local & HPC), basis set selection |
+| **Multi-Agent Orchestrator** | Coordinates both agents for end-to-end workflows | All tools from both agents |
 
 ## Installation
 

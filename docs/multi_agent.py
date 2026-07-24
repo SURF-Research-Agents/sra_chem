@@ -1,0 +1,90 @@
+import os
+from typing import Optional
+import json 
+import pathlib
+from langchain.agents import create_agent
+from deepagents.backends.filesystem import FilesystemBackend
+from langchain_surf.chat_models.chat_willma import ChatWillma
+from dotenv import load_dotenv
+from deepagents import create_deep_agent
+from langfuse import get_client
+from langfuse.langchain import CallbackHandler
+
+from sra_chem.tools.cheminformatics_tools import (
+    molecule_name_to_smiles,
+    smiles_to_atomsdata,
+    smiles_to_coordinate_file
+)
+from sra_chem.tools.directory_tools import create_workspace
+from sra_chem.tools.pyscf_tools import ground_state_energy_local, ground_state_energy_hpc
+from sra_chem.prompts.multiagent_prompt import multi_agent_prompt, chemoinformatic_agent_prompt, quantum_chemistry_agent_promt, summarization_agent_prompt
+
+load_dotenv(dotenv_path="/Users/renau001/Documents/projects/ai/SRA/.env")
+skills_path = "/Users/renau001/Documents/projects/ai/SRA/sra_chem/src/sra_chem/"
+backend = FilesystemBackend(root_dir=skills_path, virtual_mode=False)
+skills = ['skills/']
+
+api_key = os.getenv("AIHUB_API_KEY")
+# model = "default-text-large"
+model = 'Qwen/Qwen3.6-35B-A3B-FP8'
+
+# Initialize Langfuse client
+langfuse = get_client()
+
+# Initialize Langfuse CallbackHandler for Langchain (tracing)
+langfuse_handler = CallbackHandler()
+
+
+model = ChatWillma(
+    model=model,
+    temperature=0.1,
+    max_tokens=1000,
+    timeout=30,
+    api_key=api_key,
+)
+
+
+chemoinformatic_agent = {
+        "name" : "chemoinformatic_agent",
+        "description": "Used to perform chemoinformatic tasks such as converting a molecule name into a smiles or a smiles into coordinates",
+        "system_prompt": chemoinformatic_agent_prompt,
+        "tools": [molecule_name_to_smiles, smiles_to_atomsdata, smiles_to_coordinate_file],
+        "skills": ["skills/mol-xyz"]
+}
+
+quantum_chemistry_agent = {
+        "name" : "quantum_agent",
+        "description": "Used to perform quantum chemistry tasks such as computing the ground state energy of a molecule",
+        "system_prompt": quantum_chemistry_agent_promt,
+        "tools": [ground_state_energy_local, ground_state_energy_hpc]
+}
+
+summarization_agent = {
+        "name" : "summarization_agent",
+        "description": "Used to summarize computational chemistry results from the chemoinformatics and quantum chemistry agents into a clear, structured report",
+        "system_prompt": summarization_agent_prompt,
+        "tools": []
+}
+
+
+agent = create_deep_agent(model,
+                     subagents=[chemoinformatic_agent, quantum_chemistry_agent, summarization_agent],
+                     backend=backend,
+                     skills=skills,
+                     system_prompt=multi_agent_prompt)
+
+
+# result = agent.invoke(
+#     {"messages": [{"role": "user", "content": "What are the atomic coordinate of cafeine?"}]},
+#     config={"callbacks": [langfuse_handler]}
+# )
+# print(result)
+
+
+result = agent.invoke(
+    {"messages": [{"role": "user", "content": "What is the ground state energy of water?"}]},
+    stream_mode='updates',
+    config={"callbacks": [langfuse_handler]}
+)
+# print(result['messages'][-1].content)
+print(result)

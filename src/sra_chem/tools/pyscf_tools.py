@@ -6,8 +6,10 @@ Hartree-Fock ground state energy computations.
 """
 
 import os
+from pathlib import PosixPath
 from langchain_core.tools import tool
 from langchain_surf.tools.hpc_tools import tool as hpc_tools
+from langchain_surf.tools.utils.hpc_func import HPCFunc
 
 def _ground_state_energy(
     molecule_coordinate_filename: str,
@@ -81,21 +83,14 @@ def ground_state_energy_local(
     return _ground_state_energy(molecule_coordinate_filename, basis)
 
 
-from dotenv import load_dotenv
-load_dotenv(dotenv_path="/Users/renau001/Documents/projects/ai/SRA/.env")
 
-hpc_opt = {
-    'slurm_data': {
-        "url": "https://slurm.snellius.surf.nl",
-        "api_ver": "v0.0.43",
-        "user_name": os.getenv('SLURM_USER'),
-        "slurm_jwt": os.getenv("SLURM_JWT"),
-    },
-}
+# from dotenv import load_dotenv
+# load_dotenv(dotenv_path="/Users/renau001/Documents/projects/ai/SRA/.env")
 
-@hpc_tools(hpc=hpc_opt)
+@tool
 def ground_state_energy_hpc(
     molecule_coordinate_filename: str,
+    workspace_path: PosixPath,
     basis: str = "sto-3g",
 ) -> float:
     """Compute the Hartree-Fock ground state energy on a SLURM cluster.
@@ -109,6 +104,9 @@ def ground_state_energy_hpc(
     molecule_coordinate_filename : str
         Path to a file containing the molecular geometry in PySCF
         format (e.g. XYZ, Gaussian, or PySCF-native format).
+    workspace_path : PosixPath
+        Path to the workspace directory used for HPC job execution
+        and data storage on the SLURM cluster.
     basis : str, optional
         Basis set to use for the calculation. Default is "sto-3g".
         Common options include "sto-3g", "3-21g", "6-31g", "6-31g*",
@@ -127,4 +125,25 @@ def ground_state_energy_hpc(
         If the PySCF calculation fails to converge or encounters
         an error.
     """
-    return _ground_state_energy(molecule_coordinate_filename, basis)
+
+    
+    slurm_data = {
+        "url": "https://slurm.snellius.surf.nl",
+        "api_ver": "v0.0.43",
+        "user_name": os.getenv('SLURM_USER'),
+        "slurm_jwt": os.getenv('SLURM_JWT'),
+        }
+
+    print(slurm_data)
+    
+    os_data = {
+        'bucketname': workspace_path.name
+        }
+
+    hpc_func = HPCFunc(_ground_state_energy,
+                  slurm_data=slurm_data,
+                  os_data=os_data,
+                  root_dir=str(workspace_path)
+                  )
+    hpc_local_molecule_coordinate_filename = str(PosixPath(molecule_coordinate_filename).relative_to(workspace_path))
+    return hpc_func(hpc_local_molecule_coordinate_filename, basis)

@@ -1,6 +1,6 @@
 import os
-import uuid
 from datetime import datetime
+from pathlib import Path
 
 from langchain_core.tools import tool
 
@@ -17,9 +17,9 @@ def create_workspace() -> dict:
     Examples
     --------
     >>> create_workspace()
-    {'path': '/current/working/dir/abc12345-def6-7890-abcd-ef1234567890'}
+    {'path': PosixPath('/current/working/dir/abc12345-def6-7890-abcd-ef1234567890')}
     """
-    dir_name = str(datetime.now()).replace('.',':').replace(' ','_')
-    new_dir = os.path.join(os.getcwd(), f"sra_chem_{dir_name}")
-    os.makedirs(new_dir, exist_ok=True)
-    return {"path": os.path.abspath(new_dir)}
+    dir_name = str(datetime.now()).replace('.','-').replace(' ','_').replace(':','-')
+    new_dir = Path(os.getcwd()) / f"sra_chem_{dir_name}"
+    new_dir.mkdir(exist_ok=True)
+    return {"path": new_dir.resolve()}

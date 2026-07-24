@@ -10,7 +10,7 @@ echo "=== Starting services ==="
 # 1. Launch gunicorn for the Flask app
 echo "[1/3] Launching Flask app with gunicorn on port 8000..."
 cd "$LANGCHAIN_UI_DIR"
-gunicorn --worker-class gevent --workers 1 --bind 0.0.0:8000 app:app \
+gunicorn --worker-class gevent --workers 1 --bind 0.0.0:8000 app_stream:app \
     --daemon \
     --pid gunicorn.pid \
     --access-logfile - \

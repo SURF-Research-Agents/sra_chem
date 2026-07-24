@@ -1,6 +1,6 @@
 import os
+import json
 from typing import Optional
-import json 
 import pathlib
 from langchain.agents import create_agent
 from deepagents.backends.filesystem import FilesystemBackend
@@ -28,7 +28,6 @@ load_dotenv(dotenv_path="/Users/renau001/Documents/projects/ai/SRA/.env")
 
 api_key = os.getenv("AIHUB_API_KEY")
 model = "default-text-large"
-# model = 'Qwen/Qwen3.6-35B-A3B-FP8'
 
 # Initialize Langfuse client
 langfuse = get_client()
@@ -57,17 +56,23 @@ agent = create_deep_agent(model,
                      system_prompt=single_agent_prompt)
 
 
-# result = agent.invoke(
-#     {"messages": [{"role": "user", "content": "What are the atomic coordinate of cafeine?"}]},
-#     config={"callbacks": [langfuse_handler]}
-# )
-# print(result)
-
-
-result = agent.invoke(
+# Stream events and print intermediate steps
+for event in agent.stream(
     {"messages": [{"role": "user", "content": "What is the ground state energy of caffiene?"}]},
-    stream_mode='values',
+    stream_mode='updates',
     config={"callbacks": [langfuse_handler]}
-)
-# print(result['messages'][-1].content)
-print(result)
+):
+    for key, value in event.items():
+        print(f"--- {key} ---")
+        if isinstance(value, list):
+            for item in value:
+                if hasattr(item, 'content'):
+                    print(f"  content: {item.content}")
+                if hasattr(item, 'tool_calls') and item.tool_calls:
+                    for tc in item.tool_calls:
+                        print(f"  tool_call: {tc.get('name', 'unknown')} -> {tc.get('args', {})}")
+        elif hasattr(value, 'content'):
+            print(f"  content: {value.content}")
+        else:
+            print(f"  {value}")
+    print()
