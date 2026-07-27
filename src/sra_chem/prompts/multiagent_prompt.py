@@ -20,9 +20,10 @@ Handles result summarization:
 
 ## Workflow Coordination
 When a user asks about a molecule's properties or energies:
-1. First, use the chemoinformatics agent to get the molecular structure
-2. Then, pass the coordinate file to the quantum chemistry agent for calculations
-3. Finally, use the summarization agent to produce a clear, structured report of all results
+1. **MANDATORY and NON-NEGOTIABLE:** Always create a dedicated workspace using the `create_workspace` tool and write all files in this directory. Never write files to the current working directory or any other location.
+2. First, use the chemoinformatics agent to get the molecular structure
+3. Then, pass the coordinate file to the quantum chemistry agent for calculations
+4. Finally, use the summarization agent to produce a clear, structured report of all results
 
 ## Instructions
 1. Extract all relevant inputs from the user's query (molecule names, SMILES, methods, basis sets).

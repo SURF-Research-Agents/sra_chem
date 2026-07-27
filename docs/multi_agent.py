@@ -56,7 +56,8 @@ quantum_chemistry_agent = {
         "name" : "quantum_agent",
         "description": "Used to perform quantum chemistry tasks such as computing the ground state energy of a molecule",
         "system_prompt": quantum_chemistry_agent_promt,
-        "tools": [ground_state_energy_local, ground_state_energy_hpc]
+        "tools": [ground_state_energy_local, ground_state_energy_hpc],
+        "skills": ["skills/mol-groundstate"]
 }
 
 summarization_agent = {
@@ -71,20 +72,34 @@ agent = create_deep_agent(model,
                      subagents=[chemoinformatic_agent, quantum_chemistry_agent, summarization_agent],
                      backend=backend,
                      skills=skills,
-                     system_prompt=multi_agent_prompt)
+                     system_prompt=multi_agent_prompt,
+                     tools=[create_workspace],
+                     name='main-agent')
 
+if __name__ == "__main__":
+    stream = agent.stream_events(
+        {
+            "messages": [
+                {
+                    "role": "user",
+                    "content": "What is the ground state energy of water?.",
+                }
+            ]
+        },
+        version="v3",
+        config={"callbacks": [langfuse_handler]}
+    )
 
-# result = agent.invoke(
-#     {"messages": [{"role": "user", "content": "What are the atomic coordinate of cafeine?"}]},
-#     config={"callbacks": [langfuse_handler]}
-# )
-# print(result)
+    coordinator_messages: list[str] = []
+    subagent_handles = []
 
-
-result = agent.invoke(
-    {"messages": [{"role": "user", "content": "What is the ground state energy of water?"}]},
-    stream_mode='updates',
-    config={"callbacks": [langfuse_handler]}
-)
-# print(result['messages'][-1].content)
-print(result)
+    for name, item in stream.interleave("messages", "subagents"):
+        if name == "messages":
+            print("[coordinator]", item.text)
+            coordinator_messages.append(item.text)
+        else:
+            print(f"[{item.name}] started")
+            subagent_handles.append(item)
+            for message in item.messages:
+                print(f"[{item.name}]", message.text)
+            print(f"[{item.name}] status: {item.status}")
