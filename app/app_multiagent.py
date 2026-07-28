@@ -1,6 +1,7 @@
 import logging
 import os
 import json
+import time
 from dotenv import load_dotenv
 from flask import Flask, Response, request
 from werkzeug.exceptions import BadRequest
@@ -9,7 +10,7 @@ from langfuse import get_client
 from langfuse.langchain import CallbackHandler
 
 from langchain_ui.message import OpenAIRequest
-from sra_chem.agents.multi_agent import create_multi_agent, create_separate_agents
+from sra_chem.agents.multi_agent import create_multi_agent
 
 
 logging.basicConfig(level=logging.INFO)
@@ -23,19 +24,8 @@ langfuse_handler = CallbackHandler()
 
 app = Flask('MultiAgentChem')
 
-# Initialize agents based on environment variable or default to multi-agent
-AGENT_MODE = os.getenv("AGENT_MODE", "multi")  # Options: "multi", "separate"
+willma_agent = create_multi_agent(api_key=os.getenv("AIHUB_API_KEY"))
 
-if AGENT_MODE == "separate":
-    agents = create_separate_agents(api_key=api_key)
-    main_agent = agents['chemoinformatics']  # Default to chemoinformatics for backward compat
-    logger.info("Initialized separate agents (chemoinformatics as default)")
-elif AGENT_MODE == "multi":
-    main_agent = create_multi_agent(api_key=api_key)
-    logger.info("Initialized multi-agent orchestrator")
-else:
-    main_agent = create_multi_agent(api_key=api_key)
-    logger.info("Initialized multi-agent orchestrator (default)")
 
 
 @app.route("/chat/completions", methods=["POST"])
@@ -59,7 +49,8 @@ def chat():
 
     def generate():
         try:
-            for chunk in main_agent.stream(question,
+            for chunk in willma_agent.stream(question,
+                                             stream_mode='updates',
                                              config={"callbacks": [langfuse_handler]}):
                 yield chunk
         except Exception as e:
@@ -79,4 +70,4 @@ def chat():
 
 
 if __name__ == "__main__":
-    app.run(debug=True, port=8001)
+    app.run(debug=True, port=8000)

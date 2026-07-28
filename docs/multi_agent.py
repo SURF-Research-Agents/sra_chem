@@ -69,7 +69,9 @@ summarization_agent = {
 
 
 agent = create_deep_agent(model,
-                     subagents=[chemoinformatic_agent, quantum_chemistry_agent, summarization_agent],
+                     subagents=[chemoinformatic_agent, 
+                                quantum_chemistry_agent, 
+                                summarization_agent],
                      backend=backend,
                      skills=skills,
                      system_prompt=multi_agent_prompt,
