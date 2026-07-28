@@ -122,9 +122,6 @@ def chat():
                                     }
                                 ]
                             }
-        print("====")
-        print(formated_question)
-        print("===\n")
         try:
 
             stream = agent.stream_events(
@@ -133,29 +130,48 @@ def chat():
                     config={"callbacks": [langfuse_handler]}
                 )
 
-            agent_messages: list[str] = []
-            
             for name, item in stream.interleave("messages", "subagents"):
                 if name == "messages":
-                    print("[coordinator]", item.text)
-                    agent_messages.append("[coordinator] "+ str(item.text))
+                    # print("[coordinator]", item.text)
+                    data = format_data(chunk_id=str(uuid4()),
+                                        model=model_name,
+                                        system_fingerprint=str(uuid4()),
+                                        content="[coordinator] " + str(item.text)
+                                        )
+                    yield bytes(f"data: {data}\n\n", "utf-8")
                 else:
-                    print(f"[{item.name}] started")
-                    agent_messages.append(f"[{item.name}] started")
+                    # print(f"[{item.name}] started")
+                    data = format_data(chunk_id=str(uuid4()),
+                                        model=model_name,
+                                        system_fingerprint=str(uuid4()),
+                                        content=f"[{item.name}] started\n"
+                                        )
+                    yield bytes(f"data: {data}\n\n", "utf-8")
                     for message in item.messages:
-                        print(f"[{item.name}]", message.text)
-                        agent_messages.append(f"[{item.name}] " + str(message.text))
-                    print(f"[{item.name}] status: {item.status}")
-                    agent_messages.append(f"[{item.name}] status: {item.status}")
+                        # print(f"[{item.name}]", message.text)
+                        data = format_data(chunk_id=str(uuid4()),
+                                            model=model_name,
+                                            system_fingerprint=str(uuid4()),
+                                            content=str(message.text)
+                                            )
+                        yield bytes(f"data: {data}\n\n", "utf-8")
+                    # print(f"[{item.name}] status: {item.status} \n")
+                    data = format_data(chunk_id=str(uuid4()),
+                                        model=model_name,
+                                        system_fingerprint=str(uuid4()),
+                                        content=f"[{item.name}] status: {item.status} \n"
+                                        )
+                    yield bytes(f"data: {data}\n\n", "utf-8")
 
-            
+            # Send final chunk with finish_reason=stop
             data = format_data(chunk_id=str(uuid4()),
                                 model=model_name,
                                 system_fingerprint=str(uuid4()),
-                                content="\n".join(agent_messages)
+                                content=""
                                 )
-            print(data)
-            yield bytes(f"data: {data}\n\n", "utf-8")
+            parsed = json.loads(data)
+            parsed["choices"][0]["finish_reason"] = "stop"
+            yield bytes(f"data: {json.dumps(parsed)}\n\n", "utf-8")
 
         except Exception as e:
             logger.exception("Streaming error")
