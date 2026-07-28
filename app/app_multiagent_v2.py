@@ -131,12 +131,17 @@ def chat():
                 )
 
             for name, item in stream.interleave("messages", "subagents"):
+
+                print("\n=============\n")
+                print(name, item)
+                print("\n=============\n")
+
                 if name == "messages":
                     # print("[coordinator]", item.text)
                     data = format_data(chunk_id=str(uuid4()),
                                         model=model_name,
                                         system_fingerprint=str(uuid4()),
-                                        content="[coordinator] " + str(item.text)
+                                        content=str(item.text)
                                         )
                     yield bytes(f"data: {data}\n\n", "utf-8")
                 else:
@@ -144,7 +149,7 @@ def chat():
                     data = format_data(chunk_id=str(uuid4()),
                                         model=model_name,
                                         system_fingerprint=str(uuid4()),
-                                        content=f"[{item.name}] started\n"
+                                        content=f"\n🤖 *Delegating task to {item.name}*\n"
                                         )
                     yield bytes(f"data: {data}\n\n", "utf-8")
                     for message in item.messages:
@@ -159,7 +164,7 @@ def chat():
                     data = format_data(chunk_id=str(uuid4()),
                                         model=model_name,
                                         system_fingerprint=str(uuid4()),
-                                        content=f"[{item.name}] status: {item.status} \n"
+                                        content=f"\n\n\t ↪*{item.name} terminated with status: {item.status}*\n"
                                         )
                     yield bytes(f"data: {data}\n\n", "utf-8")
 
