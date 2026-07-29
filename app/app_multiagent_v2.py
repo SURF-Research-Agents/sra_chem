@@ -140,9 +140,9 @@ def chat():
                     # print("[coordinator]", item.text)
                     content = []
                     content.append(str(item.text))
-                    tool_calls = item.tool_calls.get()
-                    for tc in tool_calls:
-                        content.append(f'calling ```{tc['name']}```({tc['args']})')
+                    # tool_calls = item.tool_calls.get()
+                    # for tc in tool_calls:
+                    #     content.append(f'⚗️```{tc['name']}```')
                         
                     data = format_data(chunk_id=str(uuid4()),
                                         model=model_name,
@@ -164,7 +164,7 @@ def chat():
                         content.append(str(message.text))
                         tool_calls = message.tool_calls.get()
                         for tc in tool_calls:
-                            content.append(f'calling ```{tc['name']}```({tc['args']})')
+                            content.append(f'⚗️```{tc['name']}```')
                         data = format_data(chunk_id=str(uuid4()),
                                             model=model_name,
                                             system_fingerprint=str(uuid4()),
