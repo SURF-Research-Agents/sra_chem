@@ -138,10 +138,16 @@ def chat():
 
                 if name == "messages":
                     # print("[coordinator]", item.text)
+                    content = []
+                    content.append(str(item.text))
+                    tool_calls = item.tool_calls.get()
+                    for tc in tool_calls:
+                        content.append(f'calling ```{tc['name']}```({tc['args']})')
+                        
                     data = format_data(chunk_id=str(uuid4()),
                                         model=model_name,
                                         system_fingerprint=str(uuid4()),
-                                        content=str(item.text)
+                                        content='\n'.join(content)
                                         )
                     yield bytes(f"data: {data}\n\n", "utf-8")
                 else:
@@ -153,18 +159,23 @@ def chat():
                                         )
                     yield bytes(f"data: {data}\n\n", "utf-8")
                     for message in item.messages:
-                        # print(f"[{item.name}]", message.text)
+
+                        content = []
+                        content.append(str(message.text))
+                        tool_calls = message.tool_calls.get()
+                        for tc in tool_calls:
+                            content.append(f'calling ```{tc['name']}```({tc['args']})')
                         data = format_data(chunk_id=str(uuid4()),
                                             model=model_name,
                                             system_fingerprint=str(uuid4()),
-                                            content=str(message.text)
+                                            content='\n'.join(content)
                                             )
                         yield bytes(f"data: {data}\n\n", "utf-8")
                     # print(f"[{item.name}] status: {item.status} \n")
                     data = format_data(chunk_id=str(uuid4()),
                                         model=model_name,
                                         system_fingerprint=str(uuid4()),
-                                        content=f"\n\n\t ↪*{item.name} terminated with status: {item.status}*\n"
+                                        content=f"\n\n↪*{item.name} terminated with status: {item.status}*\n"
                                         )
                     yield bytes(f"data: {data}\n\n", "utf-8")
 

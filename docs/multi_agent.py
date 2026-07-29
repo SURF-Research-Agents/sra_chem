@@ -37,7 +37,7 @@ langfuse_handler = CallbackHandler()
 
 model = ChatWillma(
     model=model,
-    temperature=0.1,
+    temperature=0.,
     max_tokens=1000,
     timeout=30,
     api_key=api_key,
@@ -98,10 +98,16 @@ if __name__ == "__main__":
     for name, item in stream.interleave("messages", "subagents"):
         if name == "messages":
             print("[coordinator]", item.text)
-            coordinator_messages.append(item.text)
+            tool_calls = item.tool_calls.get()
+            for tc in tool_calls:
+                print(f'calling {tc['name']}({tc['args']})')
+            coordinator_messages.append(item)
         else:
             print(f"[{item.name}] started")
-            subagent_handles.append(item)
             for message in item.messages:
                 print(f"[{item.name}]", message.text)
+                tool_calls = message.tool_calls.get()
+                for tc in tool_calls:
+                    print(f'calling {tc['name']}({tc['args']})')
+                subagent_handles.append(message)
             print(f"[{item.name}] status: {item.status}")
