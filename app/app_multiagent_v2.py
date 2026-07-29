@@ -20,7 +20,7 @@ from sra_chem.tools.cheminformatics_tools import (
     smiles_to_coordinate_file
 )
 from sra_chem.tools.directory_tools import create_workspace
-from sra_chem.tools.pyscf_tools import ground_state_energy_local, ground_state_energy_hpc
+from sra_chem.tools.pyscf_tools import hf_energy_local, hf_energy_hpc
 from sra_chem.prompts.multiagent_prompt import multi_agent_prompt, chemoinformatic_agent_prompt, quantum_chemistry_agent_promt, summarization_agent_prompt
 from uuid import uuid4
 
@@ -61,7 +61,7 @@ quantum_chemistry_agent = {
         "name" : "quantum_agent",
         "description": "Used to perform quantum chemistry tasks such as computing the ground state energy of a molecule",
         "system_prompt": quantum_chemistry_agent_promt,
-        "tools": [ground_state_energy_local, ground_state_energy_hpc],
+        "tools": [hf_energy_local, hf_energy_hpc],
         "skills": ["skills/mol-groundstate"]
 }
 

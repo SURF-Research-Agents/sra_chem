@@ -17,7 +17,7 @@ from sra_chem.tools.cheminformatics_tools import (
 )
 
 from sra_chem.tools.directory_tools import create_workspace
-from sra_chem.tools.pyscf_tools import ground_state_energy_local, ground_state_energy_hpc
+from sra_chem.tools.pyscf_tools import hf_energy_local, hf_energy_hpc
 from sra_chem.prompts.single_agent_prompt import single_agent_prompt
 
 skills_path = "/Users/renau001/Documents/projects/ai/SRA/sra_chem/src/sra_chem/"
@@ -49,8 +49,8 @@ agent = create_deep_agent(model,
                      tools=[molecule_name_to_smiles,
                             smiles_to_atomsdata,
                             smiles_to_coordinate_file,
-                            ground_state_energy_local,
-                            ground_state_energy_hpc,
+                            hf_energy_local,
+                            hf_energy_hpc,
                             ],
                      backend=backend,
                      skills=skills,

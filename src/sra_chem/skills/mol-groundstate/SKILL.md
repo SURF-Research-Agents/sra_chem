@@ -4,7 +4,7 @@ description: Compute the ground state energy of a molecule from its name using P
 ---
 # Ground State Energy Computation
 
-Compute the ground state energy of a molecule using PySCF RHF by converting the molecule name to a coordinate file and running a Hartree-Fock calculation.
+Compute the ground state energy of a molecule using PySCF by converting the molecule name to a coordinate file and running either a Hartree-Fock (HF) or Density Functional Theory (DFT) calculation.
 
 ## Mandatory Steps
 
@@ -25,12 +25,18 @@ Compute the ground state energy of a molecule using PySCF RHF by converting the 
    - Specify an output file path (e.g., `molecule.xyz`) **inside the workspace directory created in step 1**.
    - Capture the returned file path.
 
-4. **Compute ground state energy** using the appropriate tool based on molecule size.
-   - For **small molecules** (up to ~10-20 atoms), use `ground_state_energy_local`.
-   - For **large molecules** (more than ~10-20 atoms), use `ground_state_energy_hpc` to submit to a SLURM cluster.
-   - Pass the coordinate file path from step 3 as `molecule_coordinate_filename`. Use relative path
+4. **Compute ground state energy** using the appropriate tool based on user request and molecule size.
+   - **Choose the method based on user input:**
+     - If the user specifies **DFT** (or mentions functional like "b3lyp", "pbe"), use the DFT tools:
+       - For **small molecules** (up to ~10-20 atoms), use `dft_energy_local`.
+       - For **large molecules** (more than ~10-20 atoms), use `dft_energy_hpc` to submit to a SLURM cluster.
+       - Pass the `functional` parameter (e.g., `"b3lyp"`, `"pbe"`) and optionally `basis`.
+     - If the user specifies **HF** or does not specify a method, use the HF tools:
+       - For **small molecules** (up to ~10-20 atoms), use `hf_energy_local`.
+       - For **large molecules** (more than ~10-20 atoms), use `hf_energy_hpc` to submit to a SLURM cluster.
+   - Pass the coordinate file path from step 3 as `molecule_coordinate_filename`. Use relative path.
    - Optionally specify a `basis` set (default: `"sto-3g"`).
-   - The tool returns the RHF convergence value (ground state energy in Hartree).
+   - The tool returns the convergence value (ground state energy in Hartree).
 
 ## Example
 
@@ -40,7 +46,16 @@ Compute the ground state energy of a molecule using PySCF RHF by converting the 
 1. Call `create_workspace` with name="water-ground-state" → workspace: "/path/to/workspace"
 2. Call `molecule_name_to_smiles` with name="water" → SMILES: "O"
 3. Call `smiles_to_coordinate_file` with smiles="O", output_file="/path/to/workspace/water.xyz" → path: "/path/to/workspace/water.xyz"
-4. Call `ground_state_energy_local` with molecule_coordinate_filename="/path/to/workspace/water.xyz" → energy: -75.0673... (Hartree)
+4. Call `hf_energy_local` with molecule_coordinate_filename="/path/to/workspace/water.xyz" → energy: -75.0673... (Hartree)
+5. Return the computed ground state energy to the user.
+
+**User:** "Compute the DFT energy of water using b3lyp"
+
+**Agent:**
+1. Call `create_workspace` with name="water-dft-ground-state" → workspace: "/path/to/workspace"
+2. Call `molecule_name_to_smiles` with name="water" → SMILES: "O"
+3. Call `smiles_to_coordinate_file` with smiles="O", output_file="/path/to/workspace/water.xyz" → path: "/path/to/workspace/water.xyz"
+4. Call `dft_energy_local` with molecule_coordinate_filename="/path/to/workspace/water.xyz", functional="b3lyp" → energy: ... (Hartree)
 5. Return the computed ground state energy to the user.
 
 **User:** "Compute the ground state energy of a large protein"
@@ -49,7 +64,7 @@ Compute the ground state energy of a molecule using PySCF RHF by converting the 
 1. Call `create_workspace` with name="protein-ground-state" → workspace: "/path/to/workspace"
 2. Call `molecule_name_to_smiles` with name="protein" → SMILES: "..."
 3. Call `smiles_to_coordinate_file` with smiles="...", output_file="/path/to/workspace/protein.xyz" → path: "/path/to/workspace/protein.xyz"
-4. Call `ground_state_energy_hpc` with molecule_coordinate_filename="/path/to/workspace/protein.xyz" → energy: ... (Hartree)
+4. Call `hf_energy_hpc` with molecule_coordinate_filename="/path/to/workspace/protein.xyz" → energy: ... (Hartree)
 5. Return the computed ground state energy to the user.
 
 ## Notes
@@ -58,8 +73,10 @@ Compute the ground state energy of a molecule using PySCF RHF by converting the 
 - **All files** generated during the workflow (coordinate files, etc.) **MUST be written inside the workspace directory** created in step 1. Never use the current working directory or any other path.
 - If `molecule_name_to_smiles` fails to find the molecule, inform the user that the molecule name could not be recognized.
 - Always verify each step succeeds before proceeding to the next.
-- The ground state energy is returned in Hartree units by PySCF RHF.
-- The calculation uses Restricted Hartree-Fock (RHF) with the default PySCF basis set ("sto-3g").
-- Use `ground_state_energy_local` for small molecules that can be computed on the local machine.
-- Use `ground_state_energy_hpc` for large molecules that require SLURM cluster resources.
-- Both tools accept an optional `basis` parameter (e.g. `"6-31g"`, `"cc-pvdz"`) for higher accuracy.
+- The ground state energy is returned in Hartree units by PySCF.
+- **HF calculation** uses Restricted Hartree-Fock (RHF) with the default PySCF basis set ("sto-3g").
+- **DFT calculation** uses Unrestricted Kohn-Sham (UKS) with the specified exchange-correlation functional.
+- Common DFT functionals: `"pbe"`, `"b3lyp"`, `"wb97x"`, `"lda"`, `"pbesol"`.
+- Use local tools (`hf_energy_local`, `dft_energy_local`) for small molecules that can be computed on the local machine.
+- Use HPC tools (`hf_energy_hpc`, `dft_energy_hpc`) for large molecules that require SLURM cluster resources.
+- Both HF and DFT tools accept an optional `basis` parameter (e.g. `"6-31g"`, `"cc-pvdz"`) for higher accuracy.

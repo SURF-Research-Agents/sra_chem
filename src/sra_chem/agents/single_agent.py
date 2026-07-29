@@ -9,7 +9,7 @@ from sra_chem.tools.cheminformatics_tools import (
 )
 
 from sra_chem.tools.directory_tools import create_workspace
-from sra_chem.tools.pyscf_tools import ground_state_energy_local, ground_state_energy_hpc
+from sra_chem.tools.pyscf_tools import hf_energy_local, hf_energy_hpc
 from sra_chem.tools.object_store_tools import sync_workspace_to_object_store
 from sra_chem.prompts.single_agent_prompt import single_agent_prompt
 
@@ -35,8 +35,8 @@ def create_chem_agent(
         tools=[molecule_name_to_smiles,
                smiles_to_atomsdata,
                smiles_to_coordinate_file,
-               ground_state_energy_local,
-               ground_state_energy_hpc,
+               hf_energy_local,
+               hf_energy_hpc,
                create_workspace,
                sync_workspace_to_object_store],
         instructions=single_agent_prompt,

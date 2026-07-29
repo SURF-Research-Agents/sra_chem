@@ -6,8 +6,8 @@ from deepagents.backends.filesystem import FilesystemBackend
 from langchain_ui.agents.agent import create_willma_agent
 
 from sra_chem.tools.pyscf_tools import (
-    ground_state_energy_local,
-    ground_state_energy_hpc,
+    hf_energy_local,
+    hf_energy_hpc,
 )
 from sra_chem.tools.directory_tools import create_workspace
 from sra_chem.prompts.single_agent_prompt import single_agent_prompt
@@ -74,8 +74,8 @@ def create_quantum_chemistry_agent(
         max_tokens=max_tokens,
         timeout=timeout,
         tools=[
-            ground_state_energy_local,
-            ground_state_energy_hpc,
+            hf_energy_local,
+            hf_energy_hpc,
             create_workspace,
         ],
         instructions=quantum_chemistry_prompt,
