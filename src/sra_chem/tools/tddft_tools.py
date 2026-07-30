@@ -229,8 +229,10 @@ def td_dft_excitations_hpc(
 
 def _td_dft_absorption_spectrum(
     excitations_data: Dict[str, Any],
+    output_file: str,
     sigma: float = 0.3,
-    wavelength_range: tuple = (100, 800),
+    wavelength_range: tuple = None,
+    
 ) -> Dict[str, Any]:
     """Compute TD-DFT absorption spectrum from precomputed excitation data.
 
@@ -242,11 +244,14 @@ def _td_dft_absorption_spectrum(
         - n_states: number of excited states
         - excitations: list of dicts with energy_ev, wavelength_nm,
           oscillator_strength, transition, etc.
+    output_file : str
+            Path to save the absorption spectrum plot as an image (PNG).
     sigma : float, optional
         Gaussian broadening width in eV. Default is 0.3.
     wavelength_range : tuple of float, optional
-        Wavelength range (min, max) in nm for the spectrum. Default is (100, 800).
-
+        Wavelength range (min, max) in nm for the spectrum.
+        If None, automatically determined from the excitation data
+        with a 20 nm margin on each side.
     Returns
     -------
     Dict[str, Any]
@@ -255,13 +260,29 @@ def _td_dft_absorption_spectrum(
         - intensities: list of absorbance intensities
         - excitations: list of computed excited states with details
         - parameters: dict of spectrum parameters used
+        - plot_saved: path to the saved plot image, or None
     """
     import numpy as np
+    import matplotlib
     import matplotlib.pyplot as plt
 
     # Extract excitation data
     excitations = excitations_data.get("excitations", [])
-    wl_min, wl_max = wavelength_range
+
+    # Auto-determine wavelength range from data if not provided
+    if wavelength_range is None:
+        valid_wls = [
+            exc.get("wavelength_nm", 0.0)
+            for exc in excitations
+            if exc.get("wavelength_nm", 0.0) > 0
+        ]
+        if valid_wls:
+            wl_min = max(0.0, min(valid_wls) - 20.0)
+            wl_max = max(valid_wls) + 20.0
+        else:
+            wl_min, wl_max = 100.0, 800.0
+    else:
+        wl_min, wl_max = wavelength_range
 
     # Build wavelength grid
     wavelengths = np.linspace(wl_min, wl_max, 1000)
@@ -298,6 +319,26 @@ def _td_dft_absorption_spectrum(
             "transition": exc.get("transition"),
         })
 
+    # Plot intensity vs wavelength
+    matplotlib.use('agg')
+    fig, ax = plt.subplots(figsize=(10, 6))
+    ax.plot(wavelengths, intensities, 'b-', linewidth=1.5, label='Absorption spectrum')
+
+    # Mark individual transitions
+    for exc in output_excitations:
+        if exc['wavelength_nm'] >= wl_min and exc['wavelength_nm'] <= wl_max:
+            ax.axvline(x=exc['wavelength_nm'], color='r', linestyle='--', alpha=0.4)
+
+    ax.set_xlabel('Wavelength (nm)', fontsize=12)
+    ax.set_ylabel('Normalized Intensity', fontsize=12)
+    ax.set_title('TD-DFT Absorption Spectrum', fontsize=14)
+    ax.legend(loc='best', fontsize=10)
+    ax.grid(True, alpha=0.3)
+    ax.set_xlim(wl_min, wl_max)
+
+    fig.tight_layout()
+    fig.savefig(output_file, dpi=150, bbox_inches='tight')
+    plt.close(fig)
 
     return {
         "wavelengths": wavelengths.tolist(),
@@ -305,16 +346,18 @@ def _td_dft_absorption_spectrum(
         "excitations": output_excitations,
         "parameters": {
             "sigma_eV": sigma,
-            "wavelength_range_nm": list(wavelength_range),
-        }
+            "wavelength_range_nm": [wl_min, wl_max],
+        },
     }
 
 
 @tool
 def td_dft_absorption_spectrum(
     excitations_data: Dict[str, Any],
+    output_file: str,
     sigma: float = 0.3,
-    wavelength_range: str = "100,800",
+    wavelength_range: str = None,
+    
 ) -> Dict[str, Any]:
     """Compute TD-DFT absorption spectrum with Gaussian-broadened peaks.
 
@@ -331,19 +374,28 @@ def td_dft_absorption_spectrum(
         - n_states: number of excited states
         - excitations: list of dicts with energy_ev, wavelength_nm,
           oscillator_strength, transition, etc.
+    output_file : str
+        Path to save the absorption spectrum plot as a PNG image.
     sigma : float, optional
         Gaussian broadening width in eV. Default is 0.3.
     wavelength_range : str, optional
-        Comma-separated min,max wavelength range in nm. Default is "100,800".
+        Comma-separated min,max wavelength range in nm (e.g. "200,700").
+        If None, automatically determined from the excitation data.
+        
 
     Returns
     -------
     Dict[str, Any]
         Dictionary with wavelength/intensity arrays for the spectrum,
-        individual excitation data, and calculation parameters.
+        individual excitation data, calculation parameters, and the
+        path to the saved plot image (if output_file was provided).
     """
-    wl_parts = wavelength_range.split(",")
-    wl_min, wl_max = float(wl_parts[0]), float(wl_parts[1])
+    if wavelength_range is not None:
+        wl_parts = wavelength_range.split(",")
+        wl_min, wl_max = float(wl_parts[0]), float(wl_parts[1])
+        return _td_dft_absorption_spectrum(
+            excitations_data, output_file, sigma, (wl_min, wl_max)
+        )
     return _td_dft_absorption_spectrum(
-        excitations_data, sigma, (wl_min, wl_max)
+        excitations_data, output_file, sigma, None
     )

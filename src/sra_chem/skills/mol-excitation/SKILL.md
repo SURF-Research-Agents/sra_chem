@@ -36,10 +36,11 @@ Compute TD-DFT (Time-Dependent Density Functional Theory) excitation energies, o
      - If no functional is specified, default to `"b3lyp"`.
    - Optionally specify a `basis` set (default: `"631g"`).
    - Optionally specify `n_states` to control the number of excited states computed (default: 10).
-   - For the spectrum tool, optionally specify `sigma` (Gaussian broadening width in eV, default: 0.3) and `wavelength_range` (comma-separated min,max in nm, default: "100,800").
+   - For the spectrum tool, optionally specify `sigma` (Gaussian broadening width in eV, default: 0.3).
    - For excitation tools, pass the coordinate file path from step 3 as `molecule_coordinate_filename`. Use relative path.
    - The excitation tools return excitation energies (eV and Hartree), wavelengths (nm), oscillator strengths, and transition details.
    - Pass the excitation data dict (from step 4 excitation tools) to `td_dft_absorption_spectrum` to generate the continuous spectrum.
+   - When generating the absorption spectrum, the `output_file` parameter (containing the plot) **MUST be saved inside the workspace directory** created in step 1.
 
 ## Example
 
@@ -59,7 +60,7 @@ Compute TD-DFT (Time-Dependent Density Functional Theory) excitation energies, o
 2. Call `molecule_name_to_smiles` with name="water" → SMILES: "O"
 3. Call `smiles_to_coordinate_file` with smiles="O", output_file="/path/to/workspace/water.xyz" → path: "/path/to/workspace/water.xyz"
 4. Call `td_dft_excitations_local` with molecule_coordinate_filename="/path/to/workspace/water.xyz", functional="b3lyp" → excitations: [...]
-5. Call `td_dft_absorption_spectrum` with excitations_data=<result from step 4> → spectrum data: {...}
+5. Call `td_dft_absorption_spectrum` with excitations_data=<result from step 4>, output_file="/path/to/workspace/absorption_spectrum.png" → spectrum data: {...}
 6. Return the absorption spectrum data (wavelengths, intensities, and excitation details) to the user.
 
 **User:** "Compute excited states of a large molecule with wb97x"
