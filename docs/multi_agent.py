@@ -17,7 +17,8 @@ from sra_chem.tools.cheminformatics_tools import (
 )
 from sra_chem.tools.directory_tools import create_workspace
 from sra_chem.tools.pyscf_tools import (hf_energy_local, hf_energy_hpc, 
-                                        dft_energy_hpc, dft_energy_local)
+                                        dft_energy_hpc, dft_energy_local,
+                                        td_dft_excitations_local, td_dft_excitations_hpc, td_dft_absorption_spectrum)
 from sra_chem.prompts.multiagent_prompt import multi_agent_prompt, chemoinformatic_agent_prompt, quantum_chemistry_agent_promt, summarization_agent_prompt
 
 load_dotenv(dotenv_path="/Users/renau001/Documents/projects/ai/SRA/.env")
@@ -57,7 +58,8 @@ quantum_chemistry_agent = {
         "name" : "quantum_agent",
         "description": "Used to perform quantum chemistry tasks such as computing the ground state energy of a molecule",
         "system_prompt": quantum_chemistry_agent_promt,
-        "tools": [hf_energy_local, hf_energy_hpc, dft_energy_local, dft_energy_hpc],
+        "tools": [hf_energy_local, hf_energy_hpc, dft_energy_local, dft_energy_hpc, 
+                  td_dft_excitations_local, td_dft_excitations_hpc, td_dft_absorption_spectrum],
         "skills": ["skills/mol-groundstate"]
 }
 
@@ -85,7 +87,7 @@ if __name__ == "__main__":
             "messages": [
                 {
                     "role": "user",
-                    "content": "What is the ground state energy of water?.",
+                    "content": "What is the excitation spectrum of a dihydrogen molecule?.",
                 }
             ]
         },

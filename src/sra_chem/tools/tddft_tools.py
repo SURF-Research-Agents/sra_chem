@@ -1,0 +1,349 @@
+"""PySCF tools for Time-Dependent DFT (TD-DFT) calculations.
+
+This module provides LangChain-compatible tools for running
+PySCF-based TD-DFT excitation energy and oscillator strength computations.
+"""
+
+import os
+import json
+from pathlib import PosixPath
+from typing import Dict, List, Any
+from langchain_core.tools import tool
+from langchain_surf.tools.utils.hpc_func import HPCFunc
+
+
+def _td_dft_excitations(
+    molecule_coordinate_filename: str,
+    functional: str = "b3lyp",
+    basis: str = "631g",
+    n_states: int = 10,
+    chkfile: str = 'pyscf.chk'
+) -> Dict[str, Any]:
+    """Compute TD-DFT excitation energies and oscillator strengths.
+
+    Parameters
+    ----------
+    molecule_coordinate_filename : str
+        Path to a file containing the molecular geometry in PySCF
+        format (e.g. XYZ, Gaussian, or PySCF-native format).
+    functional : str, optional
+        Exchange-correlation functional to use. Default is "pbe".
+        Common options include "pbe", "b3lyp", "wb97x", "lda",
+        "pbesol", etc.
+    basis : str, optional
+        Basis set to use for the calculation. Default is "sto-3g".
+        Common options include "sto-3g", "3-21g", "6-31g", "6-31g*",
+        "cc-pvdz", "cc-pvtz", etc.
+    n_states : int, optional
+        Number of low-lying excited states to compute. Default is 10.
+    chkfile: str, optional
+        Path ot the checkpoint file of the calculation
+
+    Returns
+    -------
+    Dict[str, Any]
+        Dictionary containing:
+        - hf_energy: Hartree-Fock/DFT ground state energy in Hartree
+        - n_states: number of excited states computed
+        - excitations: list of dicts with keys:
+            - state: state index (1-based)
+            - energy_ev: excitation energy in eV
+            - energy_ha: excitation energy in Hartree
+            - wavelength_nm: absorption wavelength in nm
+            - oscillator_strength: oscillator strength f
+            - transition: transition type (e.g. "S1", "T1")
+            - components: top excitation components (coefficients and orbital pairs)
+
+    Raises
+    ------
+    FileNotFoundError
+        If the specified coordinate file does not exist.
+    Exception
+        If the TD-DFT calculation fails to converge or encounters
+        an error.
+    """
+    from pyscf import gto
+    from pyscf import dft, tddft
+
+    mol = gto.M(atom=molecule_coordinate_filename, basis=basis)
+    mf = dft.RKS(mol, xc=functional)
+    mf.chkfile = chkfile
+    ehf = mf.kernel()
+
+    # TD-DFT on top of UHF/UKS
+    tds = tddft.TDDFT(mf)
+    ncs = tds.nstates if tds.nstates else n_states
+    ncs = min(ncs, n_states)
+    tds.nstates = ncs
+    e_a, _ = tds.kernel()
+    tds.analyze()
+    osc_str = tds.oscillator_strength()
+
+    # Convert to eV (1 Hartree = 27.211386245988 eV)
+    ev_per_ha = 27.211386245988
+    nm_per_ha_inv = 1239.84193  # hc in eV*nm
+
+    excitations = []
+    for ie, energy in enumerate(e_a):
+        energy_ha = float(energy)
+        energy_ev = energy_ha * ev_per_ha
+        wavelength_nm = nm_per_ha_inv / energy_ev if energy_ev > 0 else 0.0
+
+        osc_f = osc_str[ie]
+
+        excitations.append({
+            "state": ie + 1,
+            "energy_ev": round(energy_ev, 6),
+            "energy_ha": round(energy_ha, 8),
+            "wavelength_nm": round(wavelength_nm, 2),
+            "oscillator_strength": round(osc_f, 6),
+            "transition": f"S{ie + 1}",
+        })
+
+    return {
+        "hf_energy": round(ehf, 8),
+        "n_states": len(e_a),
+        "excitations": excitations,
+    }
+
+
+@tool
+def td_dft_excitations_local(
+    molecule_coordinate_filename: str,
+    functional: str = "b3lyp",
+    basis: str = "631g",
+    n_states: int = 10,
+    chkfile: str = 'pyscf.chk'
+) -> Dict[str, Any]:
+    """Compute TD-DFT excitation energies and oscillator strengths locally using PySCF.
+
+    This is a wrapper around the internal ``_td_dft_excitations`` function
+    that exposes the TD-DFT calculation as a LangChain tool for local execution.
+
+    Parameters
+    ----------
+    molecule_coordinate_filename : str
+        Path to a file containing the molecular geometry in PySCF
+        format (e.g. XYZ, Gaussian, or PySCF-native format).
+    functional : str, optional
+        Exchange-correlation functional to use. Default is "pbe".
+        Common options include "pbe", "b3lyp", "wb97x", "lda",
+        "pbesol", etc.
+    basis : str, optional
+        Basis set to use for the calculation. Default is "sto-3g".
+        Common options include "sto-3g", "3-21g", "6-31g", "6-31g*",
+        "cc-pvdz", "cc-pvtz", etc.
+    n_states : int, optional
+        Number of low-lying excited states to compute. Default is 10.
+    chkfile: str, optional
+        Path ot the checkpoint file of the calculation
+
+    Returns
+    -------
+    Dict[str, Any]
+        Dictionary containing ground state energy and a list of excited states
+        with excitation energies (eV and Hartree), wavelengths (nm), oscillator
+        strengths, and top excitation components.
+
+    Raises
+    ------
+    FileNotFoundError
+        If the specified coordinate file does not exist.
+    Exception
+        If the TD-DFT calculation fails to converge or encounters
+        an error.
+    """
+    return _td_dft_excitations(molecule_coordinate_filename, functional, basis, n_states, chkfile)
+
+
+@tool
+def td_dft_excitations_hpc(
+    molecule_coordinate_filename: str,
+    workspace_path: PosixPath,
+    functional: str = "b3lyp",
+    basis: str = "631g",
+    n_states: int = 10,
+    chkfile: str = 'pyscf.chk'
+) -> Dict[str, Any]:
+    """Compute TD-DFT excitation energies and oscillator strengths on a SLURM cluster.
+
+    This is a wrapper around the internal ``_td_dft_excitations`` function
+    that submits the TD-DFT calculation to a SLURM HPC cluster (Snellius)
+    via the LangChain HPC tool decorator.
+
+    Parameters
+    ----------
+    molecule_coordinate_filename : str
+        Path to a file containing the molecular geometry in PySCF
+        format (e.g. XYZ, Gaussian, or PySCF-native format).
+    workspace_path : PosixPath
+        Path to the workspace directory used for HPC job execution
+        and data storage on the SLURM cluster.
+    functional : str, optional
+        Exchange-correlation functional to use. Default is "pbe".
+        Common options include "pbe", "b3lyp", "wb97x", "lda",
+        "pbesol", etc.
+    basis : str, optional
+        Basis set to use for the calculation. Default is "sto-3g".
+        Common options include "sto-3g", "3-21g", "6-31g", "6-31g*",
+        "cc-pvdz", "cc-pvtz", etc.
+    n_states : int, optional
+        Number of low-lying excited states to compute. Default is 10.
+    chkfile: str, optional
+        Path ot the checkpoint file of the calculation
+
+    Returns
+    -------
+    Dict[str, Any]
+        Dictionary containing ground state energy and a list of excited states
+        with excitation energies (eV and Hartree), wavelengths (nm), oscillator
+        strengths, and top excitation components.
+
+    Raises
+    ------
+    FileNotFoundError
+        If the specified coordinate file does not exist.
+    Exception
+        If the TD-DFT calculation fails to converge or encounters
+        an error.
+    """
+    slurm_data = {
+        "url": "https://slurm.snellius.surf.nl",
+        "api_ver": "v0.0.43",
+        "user_name": os.getenv('SLURM_USER'),
+        "slurm_jwt": os.getenv('SLURM_JWT'),
+    }
+
+    os_data = {
+        'bucketname': workspace_path.name
+    }
+
+    hpc_func = HPCFunc(_td_dft_excitations,
+                  slurm_data=slurm_data,
+                  os_data=os_data,
+                  root_dir=str(workspace_path)
+                  )
+    hpc_local_molecule_coordinate_filename = str(PosixPath(molecule_coordinate_filename).relative_to(workspace_path))
+    return hpc_func(hpc_local_molecule_coordinate_filename, functional, basis, n_states, chkfile)
+
+
+def _td_dft_absorption_spectrum(
+    excitations_data: Dict[str, Any],
+    sigma: float = 0.3,
+    wavelength_range: tuple = (100, 800),
+) -> Dict[str, Any]:
+    """Compute TD-DFT absorption spectrum from precomputed excitation data.
+
+    Parameters
+    ----------
+    excitations_data : Dict[str, Any]
+        Dictionary output from ``_td_dft_excitations`` containing:
+        - hf_energy: ground state energy in Hartree
+        - n_states: number of excited states
+        - excitations: list of dicts with energy_ev, wavelength_nm,
+          oscillator_strength, transition, etc.
+    sigma : float, optional
+        Gaussian broadening width in eV. Default is 0.3.
+    wavelength_range : tuple of float, optional
+        Wavelength range (min, max) in nm for the spectrum. Default is (100, 800).
+
+    Returns
+    -------
+    Dict[str, Any]
+        Dictionary containing:
+        - wavelengths: list of wavelength values in nm
+        - intensities: list of absorbance intensities
+        - excitations: list of computed excited states with details
+        - parameters: dict of spectrum parameters used
+    """
+    import numpy as np
+    import matplotlib.pyplot as plt
+
+    # Extract excitation data
+    excitations = excitations_data.get("excitations", [])
+    wl_min, wl_max = wavelength_range
+
+    # Build wavelength grid
+    wavelengths = np.linspace(wl_min, wl_max, 1000)
+    intensities = np.zeros_like(wavelengths)
+
+    # Convolve each excitation with a Gaussian
+    for exc in excitations:
+        energy_ev = exc.get("energy_ev", 0.0)
+        osc_f = exc.get("oscillator_strength", 0.0)
+        center_nm = exc.get("wavelength_nm", 0.0)
+
+        if energy_ev <= 0 or osc_f <= 0:
+            continue
+        if center_nm < wl_min or center_nm > wl_max:
+            continue
+
+        # Gaussian broadening in wavelength space
+        sigma_nm = sigma * 1239.84193 / (energy_ev ** 2) if energy_ev > 0 else sigma
+        sigma_nm = max(sigma_nm, 0.1)  # minimum width
+        intensities += osc_f * np.exp(-0.5 * ((wavelengths - center_nm) / sigma_nm) ** 2)
+
+    # Normalize intensities
+    max_int = np.max(intensities) if np.max(intensities) > 0 else 1.0
+    intensities = intensities / max_int
+
+    # Build excitation list for output
+    output_excitations = []
+    for exc in excitations:
+        output_excitations.append({
+            "state": exc.get("state"),
+            "energy_ev": exc.get("energy_ev"),
+            "wavelength_nm": exc.get("wavelength_nm"),
+            "oscillator_strength": exc.get("oscillator_strength"),
+            "transition": exc.get("transition"),
+        })
+
+
+    return {
+        "wavelengths": wavelengths.tolist(),
+        "intensities": intensities.tolist(),
+        "excitations": output_excitations,
+        "parameters": {
+            "sigma_eV": sigma,
+            "wavelength_range_nm": list(wavelength_range),
+        }
+    }
+
+
+@tool
+def td_dft_absorption_spectrum(
+    excitations_data: Dict[str, Any],
+    sigma: float = 0.3,
+    wavelength_range: str = "100,800",
+) -> Dict[str, Any]:
+    """Compute TD-DFT absorption spectrum with Gaussian-broadened peaks.
+
+    This tool takes precomputed excitation energies and oscillator strengths
+    (e.g. from ``_td_dft_excitations`` or ``td_dft_excitations_local``)
+    and generates a continuous absorption spectrum by convoluting the
+    discrete transitions with Gaussian functions.
+
+    Parameters
+    ----------
+    excitations_data : Dict[str, Any]
+        Dictionary output from ``_td_dft_excitations`` containing:
+        - hf_energy: ground state energy in Hartree
+        - n_states: number of excited states
+        - excitations: list of dicts with energy_ev, wavelength_nm,
+          oscillator_strength, transition, etc.
+    sigma : float, optional
+        Gaussian broadening width in eV. Default is 0.3.
+    wavelength_range : str, optional
+        Comma-separated min,max wavelength range in nm. Default is "100,800".
+
+    Returns
+    -------
+    Dict[str, Any]
+        Dictionary with wavelength/intensity arrays for the spectrum,
+        individual excitation data, and calculation parameters.
+    """
+    wl_parts = wavelength_range.split(",")
+    wl_min, wl_max = float(wl_parts[0]), float(wl_parts[1])
+    return _td_dft_absorption_spectrum(
+        excitations_data, sigma, (wl_min, wl_max)
+    )

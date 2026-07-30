@@ -5,9 +5,20 @@ import pathlib
 from deepagents.backends.filesystem import FilesystemBackend
 from langchain_ui.agents.agent import create_willma_agent
 
-from sra_chem.tools.pyscf_tools import (
+from sra_chem.tools.hf_tools import (
     hf_energy_local,
     hf_energy_hpc,
+)
+
+from sra_chem.tools.dft_tools import (
+    dft_energy_local,
+    dft_energy_hpc,
+)
+
+from sra_chem.tools.tddft_tools import (
+    td_dft_excitations_local,
+    td_dft_excitations_hpc,
+    td_dft_absorption_spectrum,
 )
 from sra_chem.tools.directory_tools import create_workspace
 from sra_chem.prompts.single_agent_prompt import single_agent_prompt
@@ -27,6 +38,8 @@ Instructions:
 8. For Hartree-Fock calculations, specify appropriate basis sets (sto-3g for quick estimates, 6-31g* or cc-pvdz for production quality).
 9. Clearly report energies in both Hartree and eV units.
 10. When submitting HPC jobs, be aware of cluster queue times and resource limits.
+11. For TD-DFT calculations, use appropriate functionals (b3lyp or pbe) and basis sets; report excitation energies in eV and wavelengths in nm.
+12. For absorption spectra, use n_states=50 and sigma=0.3 eV for smooth spectra unless otherwise specified.
 """
 
 
@@ -76,6 +89,9 @@ def create_quantum_chemistry_agent(
         tools=[
             hf_energy_local,
             hf_energy_hpc,
+            td_dft_excitations_local,
+            td_dft_excitations_hpc,
+            td_dft_absorption_spectrum,
             create_workspace,
         ],
         instructions=quantum_chemistry_prompt,

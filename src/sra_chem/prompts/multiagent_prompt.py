@@ -9,6 +9,8 @@ Handles molecular representation and structure generation:
 ## Quantum Chemistry Agent
 Handles electronic structure calculations:
 - Hartree-Fock ground state energy computations
+- Density Functional (DFT) ground state energy computations
+- Time Dependent Density Functional (TD-DFT) excited states and excitation spectrum calculation
 - Basis set selection and calculation setup
 - HPC job submission for expensive calculations
 
