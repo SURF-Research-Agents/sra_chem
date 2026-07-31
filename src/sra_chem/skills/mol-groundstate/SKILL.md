@@ -25,7 +25,15 @@ Compute the ground state energy of a molecule using PySCF by converting the mole
    - Specify an output file path (e.g., `molecule.xyz`) **inside the workspace directory created in step 1**.
    - Capture the returned file path.
 
-4. **Compute ground state energy** using the appropriate tool based on user request and molecule size.
+4. **Optimize geometry (optional).** Before computing the ground state energy, ask the user if they would like to optimize the geometry of the molecule first.
+   - If the user confirms, perform geometry optimization using the appropriate tool based on molecule size:
+     - For **small molecules** (up to ~10-20 atoms), use `optimize_geometry_local`.
+     - For **large molecules** (more than ~10-20 atoms), use `optimize_geometry_hpc` to submit to a SLURM cluster.
+   - Specify the output file path **inside the workspace directory** (e.g., `optimized_molecule.xyz`).
+   - Use the optimized coordinate file as input for the ground state energy calculation instead of the initial coordinate file from step 3.
+   - If the user declines, skip this step and proceed directly to step 5 using the coordinate file from step 3.
+
+5. **Compute ground state energy** using the appropriate tool based on user request and molecule size.
    - **Choose the method based on user input:**
      - If the user specifies **DFT** (or mentions functional like "b3lyp", "pbe"), use the DFT tools:
        - For **small molecules** (up to ~10-20 atoms), use `dft_energy_local`.
@@ -34,7 +42,7 @@ Compute the ground state energy of a molecule using PySCF by converting the mole
      - If the user specifies **HF** or does not specify a method, use the HF tools:
        - For **small molecules** (up to ~10-20 atoms), use `hf_energy_local`.
        - For **large molecules** (more than ~10-20 atoms), use `hf_energy_hpc` to submit to a SLURM cluster.
-   - Pass the coordinate file path from step 3 as `molecule_coordinate_filename`. Use relative path.
+   - Pass the coordinate file path from step 3 (or step 4 if geometry optimization was performed) as `molecule_coordinate_filename`. Use relative path.
    - Optionally specify a `basis` set (default: `"sto-3g"`).
    - The tool returns the convergence value (ground state energy in Hartree).
 
@@ -46,8 +54,22 @@ Compute the ground state energy of a molecule using PySCF by converting the mole
 1. Call `create_workspace` with name="water-ground-state" → workspace: "/path/to/workspace"
 2. Call `molecule_name_to_smiles` with name="water" → SMILES: "O"
 3. Call `smiles_to_coordinate_file` with smiles="O", output_file="/path/to/workspace/water.xyz" → path: "/path/to/workspace/water.xyz"
-4. Call `hf_energy_local` with molecule_coordinate_filename="/path/to/workspace/water.xyz" → energy: -75.0673... (Hartree)
-5. Return the computed ground state energy to the user.
+4. Ask the user: "Would you like to optimize the geometry of the molecule before computing the ground state energy?"
+   - User: "No" → Skip optimization.
+5. Call `hf_energy_local` with molecule_coordinate_filename="/path/to/workspace/water.xyz" → energy: -75.0673... (Hartree)
+6. Return the computed ground state energy to the user.
+
+**User:** "Compute the ground state energy of water" (with optimization)
+
+**Agent:**
+1. Call `create_workspace` with name="water-ground-state" → workspace: "/path/to/workspace"
+2. Call `molecule_name_to_smiles` with name="water" → SMILES: "O"
+3. Call `smiles_to_coordinate_file` with smiles="O", output_file="/path/to/workspace/water.xyz" → path: "/path/to/workspace/water.xyz"
+4. Ask the user: "Would you like to optimize the geometry of the molecule before computing the ground state energy?"
+   - User: "Yes" → proceed with optimization.
+5. Call `optimize_geometry_local` with molecule_coordinate_filename="/path/to/workspace/water.xyz", output_file="/path/to/workspace/optimized_water.xyz" → optimized: {...}
+6. Call `hf_energy_local` with molecule_coordinate_filename="/path/to/workspace/optimized_water.xyz" → energy: -75.0673... (Hartree)
+7. Return the computed ground state energy to the user.
 
 **User:** "Compute the DFT energy of water using b3lyp"
 
@@ -55,8 +77,10 @@ Compute the ground state energy of a molecule using PySCF by converting the mole
 1. Call `create_workspace` with name="water-dft-ground-state" → workspace: "/path/to/workspace"
 2. Call `molecule_name_to_smiles` with name="water" → SMILES: "O"
 3. Call `smiles_to_coordinate_file` with smiles="O", output_file="/path/to/workspace/water.xyz" → path: "/path/to/workspace/water.xyz"
-4. Call `dft_energy_local` with molecule_coordinate_filename="/path/to/workspace/water.xyz", functional="b3lyp" → energy: ... (Hartree)
-5. Return the computed ground state energy to the user.
+4. Ask the user: "Would you like to optimize the geometry of the molecule before computing the DFT energy?"
+   - User: "No" → Skip optimization.
+5. Call `dft_energy_local` with molecule_coordinate_filename="/path/to/workspace/water.xyz", functional="b3lyp" → energy: ... (Hartree)
+6. Return the computed ground state energy to the user.
 
 **User:** "Compute the ground state energy of a large protein"
 
@@ -64,8 +88,10 @@ Compute the ground state energy of a molecule using PySCF by converting the mole
 1. Call `create_workspace` with name="protein-ground-state" → workspace: "/path/to/workspace"
 2. Call `molecule_name_to_smiles` with name="protein" → SMILES: "..."
 3. Call `smiles_to_coordinate_file` with smiles="...", output_file="/path/to/workspace/protein.xyz" → path: "/path/to/workspace/protein.xyz"
-4. Call `hf_energy_hpc` with molecule_coordinate_filename="/path/to/workspace/protein.xyz" → energy: ... (Hartree)
-5. Return the computed ground state energy to the user.
+4. Ask the user: "Would you like to optimize the geometry of the molecule before computing the ground state energy?"
+   - User: "No" → Skip optimization.
+5. Call `hf_energy_hpc` with molecule_coordinate_filename="/path/to/workspace/protein.xyz" → energy: ... (Hartree)
+6. Return the computed ground state energy to the user.
 
 ## Notes
 
@@ -74,6 +100,9 @@ Compute the ground state energy of a molecule using PySCF by converting the mole
 - If `molecule_name_to_smiles` fails to find the molecule, inform the user that the molecule name could not be recognized.
 - Always verify each step succeeds before proceeding to the next.
 - The ground state energy is returned in Hartree units by PySCF.
+- Geometry optimization is **optional but recommended** before ground state energy calculations. Always ask the user if they want to optimize the geometry first.
+- Use `optimize_geometry_local` for small molecules and `optimize_geometry_hpc` for large molecules requiring SLURM cluster resources.
+- The optimized coordinate file (e.g., `optimized_molecule.xyz`) **MUST be saved inside the workspace directory** created in step 1.
 - **HF calculation** uses Restricted Hartree-Fock (RHF) with the default PySCF basis set ("sto-3g").
 - **DFT calculation** uses Unrestricted Kohn-Sham (UKS) with the specified exchange-correlation functional.
 - Common DFT functionals: `"pbe"`, `"b3lyp"`, `"wb97x"`, `"lda"`, `"pbesol"`.

@@ -21,3 +21,8 @@ from sra_chem.tools.tddft_tools import (
     td_dft_absorption_spectrum
 
 )
+
+from sra_chem.tools.optimize_tools import (
+    optimize_geometry_local,
+    optimize_geometry_hpc,
+)

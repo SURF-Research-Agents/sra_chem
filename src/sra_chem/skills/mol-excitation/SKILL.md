@@ -25,7 +25,15 @@ Compute TD-DFT (Time-Dependent Density Functional Theory) excitation energies, o
    - Specify an output file path (e.g., `molecule.xyz`) **inside the workspace directory created in step 1**.
    - Capture the returned file path.
 
-4. **Compute TD-DFT properties** using the appropriate tool based on user request and molecule size.
+4. **Optimize geometry (optional).** Before computing TD-DFT properties, ask the user if they would like to optimize the geometry of the molecule first.
+   - If the user confirms, perform geometry optimization using the appropriate tool based on molecule size:
+     - For **small molecules** (up to ~10-20 atoms), use `optimize_geometry_local`.
+     - For **large molecules** (more than ~10-20 atoms), use `optimize_geometry_hpc` to submit to a SLURM cluster.
+   - Specify the output file path **inside the workspace directory** (e.g., `optimized_molecule.xyz`).
+   - Use the optimized coordinate file as input for subsequent TD-DFT steps instead of the initial coordinate file from step 3.
+   - If the user declines, skip this step and proceed directly to step 5 using the coordinate file from step 3.
+
+5. **Compute TD-DFT properties** using the appropriate tool based on user request and molecule size.
    - **Choose the tool based on user request:**
      - If the user wants **excitation energies and oscillator strengths** (individual excited states), use the excitation tools:
        - For **small molecules** (up to ~10-20 atoms), use `td_dft_excitations_local`.
@@ -37,9 +45,9 @@ Compute TD-DFT (Time-Dependent Density Functional Theory) excitation energies, o
    - Optionally specify a `basis` set (default: `"631g"`).
    - Optionally specify `n_states` to control the number of excited states computed (default: 10).
    - For the spectrum tool, optionally specify `sigma` (Gaussian broadening width in eV, default: 0.3).
-   - For excitation tools, pass the coordinate file path from step 3 as `molecule_coordinate_filename`. Use relative path.
+   - For excitation tools, pass the coordinate file path from step 3 (or step 4 if geometry optimization was performed) as `molecule_coordinate_filename`. Use relative path.
    - The excitation tools return excitation energies (eV and Hartree), wavelengths (nm), oscillator strengths, and transition details.
-   - Pass the excitation data dict (from step 4 excitation tools) to `td_dft_absorption_spectrum` to generate the continuous spectrum.
+   - Pass the excitation data dict (from step 5 excitation tools) to `td_dft_absorption_spectrum` to generate the continuous spectrum.
    - When generating the absorption spectrum, the `output_file` parameter (containing the plot) **MUST be saved inside the workspace directory** created in step 1.
 
 ## Example
@@ -50,8 +58,22 @@ Compute TD-DFT (Time-Dependent Density Functional Theory) excitation energies, o
 1. Call `create_workspace` with name="water-tddft-excitations" → workspace: "/path/to/workspace"
 2. Call `molecule_name_to_smiles` with name="water" → SMILES: "O"
 3. Call `smiles_to_coordinate_file` with smiles="O", output_file="/path/to/workspace/water.xyz" → path: "/path/to/workspace/water.xyz"
-4. Call `td_dft_excitations_local` with molecule_coordinate_filename="/path/to/workspace/water.xyz" → excitations: [...]
-5. Return the computed excitation energies and oscillator strengths to the user.
+4. Ask the user: "Would you like to optimize the geometry of the molecule before computing excitation energies?"
+   - User: "No" → Skip optimization.
+5. Call `td_dft_excitations_local` with molecule_coordinate_filename="/path/to/workspace/water.xyz" → excitations: [...]
+6. Return the computed excitation energies and oscillator strengths to the user.
+
+**User:** "Compute the TD-DFT excitation energies of water" (with optimization)
+
+**Agent:**
+1. Call `create_workspace` with name="water-tddft-excitations" → workspace: "/path/to/workspace"
+2. Call `molecule_name_to_smiles` with name="water" → SMILES: "O"
+3. Call `smiles_to_coordinate_file` with smiles="O", output_file="/path/to/workspace/water.xyz" → path: "/path/to/workspace/water.xyz"
+4. Ask the user: "Would you like to optimize the geometry of the molecule before computing excitation energies?"
+   - User: "Yes" → proceed with optimization.
+5. Call `optimize_geometry_local` with molecule_coordinate_filename="/path/to/workspace/water.xyz", output_file="/path/to/workspace/optimized_water.xyz" → optimized: {...}
+6. Call `td_dft_excitations_local` with molecule_coordinate_filename="/path/to/workspace/optimized_water.xyz" → excitations: [...]
+7. Return the computed excitation energies and oscillator strengths to the user.
 
 **User:** "Compute the TD-DFT absorption spectrum of water using b3lyp"
 
@@ -59,9 +81,11 @@ Compute TD-DFT (Time-Dependent Density Functional Theory) excitation energies, o
 1. Call `create_workspace` with name="water-tddft-spectrum" → workspace: "/path/to/workspace"
 2. Call `molecule_name_to_smiles` with name="water" → SMILES: "O"
 3. Call `smiles_to_coordinate_file` with smiles="O", output_file="/path/to/workspace/water.xyz" → path: "/path/to/workspace/water.xyz"
-4. Call `td_dft_excitations_local` with molecule_coordinate_filename="/path/to/workspace/water.xyz", functional="b3lyp" → excitations: [...]
-5. Call `td_dft_absorption_spectrum` with excitations_data=<result from step 4>, output_file="/path/to/workspace/absorption_spectrum.png" → spectrum data: {...}
-6. Return the absorption spectrum data (wavelengths, intensities, and excitation details) to the user.
+4. Ask the user: "Would you like to optimize the geometry of the molecule before computing the absorption spectrum?"
+   - User: "No" → Skip optimization.
+5. Call `td_dft_excitations_local` with molecule_coordinate_filename="/path/to/workspace/water.xyz", functional="b3lyp" → excitations: [...]
+6. Call `td_dft_absorption_spectrum` with excitations_data=<result from step 5>, output_file="/path/to/workspace/absorption_spectrum.png" → spectrum data: {...}
+7. Return the absorption spectrum data (wavelengths, intensities, and excitation details) to the user.
 
 **User:** "Compute excited states of a large molecule with wb97x"
 
@@ -69,8 +93,10 @@ Compute TD-DFT (Time-Dependent Density Functional Theory) excitation energies, o
 1. Call `create_workspace` with name="molecule-tddft-excitations" → workspace: "/path/to/workspace"
 2. Call `molecule_name_to_smiles` with name="molecule" → SMILES: "..."
 3. Call `smiles_to_coordinate_file` with smiles="...", output_file="/path/to/workspace/molecule.xyz" → path: "/path/to/workspace/molecule.xyz"
-4. Call `td_dft_excitations_hpc` with molecule_coordinate_filename="/path/to/workspace/molecule.xyz", functional="wb97x" → excitations: [...]
-5. Return the computed excitation energies and oscillator strengths to the user.
+4. Ask the user: "Would you like to optimize the geometry of the molecule before computing excited states?"
+   - User: "No" → Skip optimization.
+5. Call `td_dft_excitations_hpc` with molecule_coordinate_filename="/path/to/workspace/molecule.xyz", functional="wb97x" → excitations: [...]
+6. Return the computed excitation energies and oscillator strengths to the user.
 
 ## Notes
 
@@ -79,6 +105,9 @@ Compute TD-DFT (Time-Dependent Density Functional Theory) excitation energies, o
 - If `molecule_name_to_smiles` fails to find the molecule, inform the user that the molecule name could not be recognized.
 - Always verify each step succeeds before proceeding to the next.
 - Excitation energies are returned in both eV and Hartree units. Wavelengths are in nm.
+- Geometry optimization is **optional but recommended** before TD-DFT calculations. Always ask the user if they want to optimize the geometry first.
+- Use `optimize_geometry_local` for small molecules and `optimize_geometry_hpc` for large molecules requiring SLURM cluster resources.
+- The optimized coordinate file (e.g., `optimized_molecule.xyz`) **MUST be saved inside the workspace directory** created in step 1.
 - **TD-DFT excitation calculation** uses Unrestricted Kohn-Sham (UKS) reference with TD-DFT on top (UKS/TD-DFT).
 - Common DFT functionals: `"pbe"`, `"b3lyp"`, `"wb97x"`, `"lda"`, `"pbesol"`.
 - **Excitation tools** (`td_dft_excitations_local`, `td_dft_excitations_hpc`) return discrete excited states with energies, wavelengths, oscillator strengths, and top excitation components (orbital transitions).
