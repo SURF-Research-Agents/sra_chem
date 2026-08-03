@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 load_dotenv('/Users/renau001/Documents/projects/ai/SRA/.env')
 api_key = os.getenv("AIHUB_API_KEY")
 model_name = 'Qwen/Qwen3.6-35B-A3B-FP8'
-model_name = 'Qwen/Qwen3.6-27B-FP8'
+# model_name = 'Qwen/Qwen3.6-27B-FP8'
 
 langfuse = get_client()
 langfuse_handler = CallbackHandler()
@@ -91,8 +91,6 @@ agent = create_deep_agent(model,
 
 
 app = Flask('MultiAgentChem')
-
-
 
 @app.route("/chat/completions", methods=["POST"])
 def chat():
