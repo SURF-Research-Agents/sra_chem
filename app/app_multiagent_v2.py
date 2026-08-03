@@ -3,23 +3,22 @@ import os
 from dotenv import load_dotenv
 from deepagents import create_deep_agent
 from deepagents.backends.filesystem import FilesystemBackend
-from langfuse import get_client
-from langfuse.langchain import CallbackHandler
+
 
 from langchain_surf.chat_models.chat_willma import ChatWillma
-
+from langchain_ui.app.multiagent_app_factory import create_app
 from sra_chem.tools.cheminformatics_tools import (
     molecule_name_to_smiles,
     smiles_to_atomsdata,
     smiles_to_coordinate_file
 )
 from sra_chem.tools.directory_tools import create_workspace
-from sra_chem.tools.hf_tools import hf_energy_local, hf_energy_hpc 
+from sra_chem.tools.hf_tools import hf_energy_local, hf_energy_hpc
 from sra_chem.tools.dft_tools import dft_energy_local, dft_energy_hpc
 from sra_chem.tools.tddft_tools import td_dft_absorption_spectrum, td_dft_excitations_hpc,td_dft_excitations_local
 
 from sra_chem.prompts.multiagent_prompt import multi_agent_prompt, chemoinformatic_agent_prompt, quantum_chemistry_agent_promt, summarization_agent_prompt
-from app_factory import create_app
+# from app_factory import create_app
 
 logging.basicConfig(level=logging.INFO)
 
@@ -29,9 +28,6 @@ model_name = 'Qwen/Qwen3.6-35B-A3B-FP8'
 # model_name = 'Qwen/Qwen3.6-27B-FP8'
 # model_name = 'mistralai/Mistral-Small-3.2-24B-Instruct-2506'
 # model_name = 'openai/gpt-oss-120b'
-
-langfuse = get_client()
-langfuse_handler = CallbackHandler()
 
 
 skills_path = "/Users/renau001/Documents/projects/ai/SRA/sra_chem/src/sra_chem/"
@@ -82,7 +78,7 @@ agent = create_deep_agent(model,
                      tools=[create_workspace],
                      name='main-agent')
 
-app = create_app(agent, model_name, langfuse_handler)
+app = create_app(agent, model_name)
 
 
 if __name__ == "__main__":
