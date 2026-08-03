@@ -1,17 +1,11 @@
 import logging
 import os
-import json
-import time
 from dotenv import load_dotenv
-from flask import Flask, Response, request
-from werkzeug.exceptions import BadRequest
 from deepagents import create_deep_agent
 from deepagents.backends.filesystem import FilesystemBackend
 from langfuse import get_client
 from langfuse.langchain import CallbackHandler
 
-from langchain_ui.message import OpenAIRequest
-from langchain_ui.agents.agent_utils import format_data
 from langchain_surf.chat_models.chat_willma import ChatWillma
 
 from sra_chem.tools.cheminformatics_tools import (
@@ -25,15 +19,16 @@ from sra_chem.tools.dft_tools import dft_energy_local, dft_energy_hpc
 from sra_chem.tools.tddft_tools import td_dft_absorption_spectrum, td_dft_excitations_hpc,td_dft_excitations_local
 
 from sra_chem.prompts.multiagent_prompt import multi_agent_prompt, chemoinformatic_agent_prompt, quantum_chemistry_agent_promt, summarization_agent_prompt
-from uuid import uuid4
+from app_factory import create_app
 
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 load_dotenv('/Users/renau001/Documents/projects/ai/SRA/.env')
 api_key = os.getenv("AIHUB_API_KEY")
 model_name = 'Qwen/Qwen3.6-35B-A3B-FP8'
-model_name = 'Qwen/Qwen3.6-27B-FP8'
+# model_name = 'Qwen/Qwen3.6-27B-FP8'
+# model_name = 'mistralai/Mistral-Small-3.2-24B-Instruct-2506'
+# model_name = 'openai/gpt-oss-120b'
 
 langfuse = get_client()
 langfuse_handler = CallbackHandler()
@@ -87,124 +82,7 @@ agent = create_deep_agent(model,
                      tools=[create_workspace],
                      name='main-agent')
 
-
-
-
-app = Flask('MultiAgentChem')
-
-
-
-@app.route("/chat/completions", methods=["POST"])
-def chat():
-
-
-    try:
-        payload = request.get_json(force=True, silent=True)
-        if not payload:
-            raise BadRequest("Missing JSON body")
-
-        chat_request = OpenAIRequest(**payload)
-        question = chat_request.messages[-1].content
-
-        if not question:
-            raise BadRequest("Empty question")
-    except (BadRequest, TypeError, KeyError) as e:
-        return Response(
-            f'data: {{"error": "{str(e)}"}}\n\n',
-            mimetype="text/event-stream",
-            status=400
-        )
-
-    def generate():
-        formated_question = {
-                                "messages": [
-                                    {
-                                        "role": "user",
-                                        "content": question,
-                                    }
-                                ]
-                            }
-        try:
-
-            stream = agent.stream_events(
-                    formated_question,
-                    version='v3',
-                    config={"callbacks": [langfuse_handler]}
-                )
-
-            for name, item in stream.interleave("messages", "subagents"):
-
-                print("\n=============\n")
-                print(name, item)
-                print("\n=============\n")
-
-                if name == "messages":
-                    # print("[coordinator]", item.text)
-                    content = []
-                    content.append(str(item.text))
-                    # tool_calls = item.tool_calls.get()
-                    # for tc in tool_calls:
-                    #     content.append(f'⚗️```{tc['name']}```')
-                        
-                    data = format_data(chunk_id=str(uuid4()),
-                                        model=model_name,
-                                        system_fingerprint=str(uuid4()),
-                                        content='\n'.join(content)
-                                        )
-                    yield bytes(f"data: {data}\n\n", "utf-8")
-                else:
-                    # print(f"[{item.name}] started")
-                    data = format_data(chunk_id=str(uuid4()),
-                                        model=model_name,
-                                        system_fingerprint=str(uuid4()),
-                                        content=f"\n🤖 *Delegating task to {item.name}*\n"
-                                        )
-                    yield bytes(f"data: {data}\n\n", "utf-8")
-                    for message in item.messages:
-
-                        content = []
-                        content.append(str(message.text))
-                        tool_calls = message.tool_calls.get()
-                        for tc in tool_calls:
-                            content.append(f'⚗️```{tc['name']}```')
-                        data = format_data(chunk_id=str(uuid4()),
-                                            model=model_name,
-                                            system_fingerprint=str(uuid4()),
-                                            content='\n'.join(content)
-                                            )
-                        yield bytes(f"data: {data}\n\n", "utf-8")
-                    # print(f"[{item.name}] status: {item.status} \n")
-                    data = format_data(chunk_id=str(uuid4()),
-                                        model=model_name,
-                                        system_fingerprint=str(uuid4()),
-                                        content=f"\n\n↪*{item.name} terminated with status: {item.status}*\n"
-                                        )
-                    yield bytes(f"data: {data}\n\n", "utf-8")
-
-            # Send final chunk with finish_reason=stop
-            data = format_data(chunk_id=str(uuid4()),
-                                model=model_name,
-                                system_fingerprint=str(uuid4()),
-                                content=""
-                                )
-            parsed = json.loads(data)
-            parsed["choices"][0]["finish_reason"] = "stop"
-            yield bytes(f"data: {json.dumps(parsed)}\n\n", "utf-8")
-
-        except Exception as e:
-            logger.exception("Streaming error")
-            yield f'data: {{"error": "{str(e)}"}}\n\n'
-
-    return Response(
-        generate(),
-        mimetype="text/event-stream",
-        headers={
-            "Cache-Control": "no-cache",
-            "Connection": "keep-alive",
-            "X-Accel-Buffering": "no",
-        },
-        direct_passthrough=True,
-    )
+app = create_app(agent, model_name, langfuse_handler)
 
 
 if __name__ == "__main__":
