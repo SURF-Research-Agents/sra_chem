@@ -114,8 +114,6 @@ def chat():
             mimetype="text/event-stream",
             status=400
         )
-    
-
 
     def generate():
         formated_question = {
