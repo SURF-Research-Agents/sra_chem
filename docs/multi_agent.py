@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 from deepagents import create_deep_agent
 from langfuse import get_client
 from langfuse.langchain import CallbackHandler
+from langgraph.checkpoint.memory import InMemorySaver
 
 from sra_chem.tools.cheminformatics_tools import (
     molecule_name_to_smiles,
@@ -79,9 +80,11 @@ agent = create_deep_agent(model,
                      skills=skills,
                      system_prompt=multi_agent_prompt,
                      tools=[create_workspace],
+                     checkpointer=InMemorySaver(),
                      name='main-agent')
 
 if __name__ == "__main__":
+    # thread_config = {"configurable": {"thread_id": "1"}}
     stream = agent.stream_events(
         {
             "messages": [
@@ -91,8 +94,9 @@ if __name__ == "__main__":
                 }
             ]
         },
+        
         version="v3",
-        config={"callbacks": [langfuse_handler]}
+        config={"callbacks": [langfuse_handler], "configurable": {"thread_id": "1"}}
     )
 
     coordinator_messages: list[str] = []

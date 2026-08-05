@@ -6,6 +6,7 @@ PySCF-based TD-DFT excitation energy and oscillator strength computations.
 
 import os
 import json
+import subprocess
 from pathlib import PosixPath
 from typing import Dict, List, Any
 from langchain_core.tools import tool
@@ -339,6 +340,9 @@ def _td_dft_absorption_spectrum(
     fig.tight_layout()
     fig.savefig(output_file, dpi=150, bbox_inches='tight')
     plt.close(fig)
+
+    # show the figure
+    subprocess.run(["open", output_file], check=False)
 
     return {
         "wavelengths": wavelengths.tolist(),

@@ -3,6 +3,8 @@ import os
 from dotenv import load_dotenv
 from deepagents import create_deep_agent
 from deepagents.backends.filesystem import FilesystemBackend
+from langgraph.checkpoint.memory import InMemorySaver
+
 
 from langchain_surf.chat_models.chat_willma import ChatWillma
 from langchain_ui.app.multiagent_app_factory import create_app
@@ -22,8 +24,8 @@ logging.basicConfig(level=logging.INFO)
 
 load_dotenv('/Users/renau001/Documents/projects/ai/SRA/.env')
 api_key = os.getenv("AIHUB_API_KEY")
-model_name = 'Qwen/Qwen3.6-35B-A3B-FP8'
-# model_name = 'Qwen/Qwen3.6-27B-FP8'
+# model_name = 'Qwen/Qwen3.6-35B-A3B-FP8'
+model_name = 'Qwen/Qwen3.6-27B-FP8'
 # model_name = 'mistralai/Mistral-Small-3.2-24B-Instruct-2506'
 # model_name = 'openai/gpt-oss-120b'
 
@@ -74,9 +76,11 @@ agent = create_deep_agent(model,
                      skills=skills,
                      system_prompt=multi_agent_prompt,
                      tools=[create_workspace],
+                     checkpointer=InMemorySaver(),
                      name='main-agent')
 
 app = create_app(agent, model_name)
+
 
 
 if __name__ == "__main__":
