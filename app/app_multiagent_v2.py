@@ -17,15 +17,16 @@ from sra_chem.tools.directory_tools import create_workspace
 from sra_chem.tools.hf_tools import hf_energy_local, hf_energy_hpc
 from sra_chem.tools.dft_tools import dft_energy_local, dft_energy_hpc
 from sra_chem.tools.tddft_tools import td_dft_absorption_spectrum, td_dft_excitations_hpc,td_dft_excitations_local
+from sra_chem.tools.resource_estimation_tools import estimate_simulation_resources
 
-from sra_chem.prompts.multiagent_prompt import multi_agent_prompt, chemoinformatic_agent_prompt, quantum_chemistry_agent_promt, summarization_agent_prompt
+from sra_chem.prompts.multiagent_prompt import multi_agent_prompt, chemoinformatic_agent_prompt, quantum_chemistry_agent_promt, resource_estimation_agent_prompt, summarization_agent_prompt
 
 logging.basicConfig(level=logging.INFO)
 
 load_dotenv('/Users/renau001/Documents/projects/ai/SRA/.env')
 api_key = os.getenv("AIHUB_API_KEY")
-# model_name = 'Qwen/Qwen3.6-35B-A3B-FP8'
-model_name = 'Qwen/Qwen3.6-27B-FP8'
+model_name = 'Qwen/Qwen3.6-35B-A3B-FP8'
+# model_name = 'Qwen/Qwen3.6-27B-FP8'
 # model_name = 'mistralai/Mistral-Small-3.2-24B-Instruct-2506'
 # model_name = 'openai/gpt-oss-120b'
 
@@ -42,7 +43,6 @@ model = ChatWillma(
     timeout=30,
     api_key=api_key,
 )
-
 
 chemoinformatic_agent = {
         "name" : "chemoinformatic_agent",
@@ -67,11 +67,19 @@ summarization_agent = {
         "tools": []
 }
 
+resource_estimation_agent = {
+        "name": "resource_estimation_agent",
+        "description": "Used to estimate compute time, memory, and HPC job parameters (SLURM resources) for quantum chemistry simulations before running them",
+        "system_prompt": resource_estimation_agent_prompt,
+        "tools": [estimate_simulation_resources]
+}
+
 
 agent = create_deep_agent(model,
-                     subagents=[chemoinformatic_agent, 
-                                quantum_chemistry_agent, 
-                                summarization_agent],
+                     subagents=[chemoinformatic_agent,
+                                quantum_chemistry_agent,
+                                summarization_agent,
+                                resource_estimation_agent],
                      backend=backend,
                      skills=skills,
                      system_prompt=multi_agent_prompt,
