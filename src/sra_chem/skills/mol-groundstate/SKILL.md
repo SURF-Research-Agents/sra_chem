@@ -49,7 +49,7 @@ Compute the ground state energy of a molecule using PySCF by converting the mole
      - If local execution is sufficient (from step 4), use the local tool:
        - For DFT calculations, use `dft_energy_local`.
        - For HF calculations, use `hf_energy_local`.
-   - Pass the coordinate file path from step 3 as `molecule_coordinate_filename`. Use relative path.
+   - Pass the coordinate file path from step 3 as `molecule_coordinate_filename`. Use absolute path.
    - Pass the `functional` parameter (e.g., `"b3lyp"`, `"pbe"`) if DFT is being used.
    - Optionally specify a `basis` set (default: `"sto-3g"`).
    - The tool returns the convergence value (ground state energy in Hartree).

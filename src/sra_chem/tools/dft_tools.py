@@ -9,7 +9,6 @@ from pathlib import PosixPath
 from langchain_core.tools import tool
 from langchain_surf.tools.utils.hpc_func import HPCFunc
 
-
 def _dft_energy(
     molecule_coordinate_filename: str,
     functional: str = "pbe",

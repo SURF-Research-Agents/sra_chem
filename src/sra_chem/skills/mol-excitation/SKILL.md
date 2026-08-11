@@ -53,7 +53,7 @@ Compute TD-DFT (Time-Dependent Density Functional Theory) excitation energies, o
    - Optionally specify a `basis` set (default: `"631g"`).
    - Optionally specify `n_states` to control the number of excited states computed (default: 10).
    - For the spectrum tool, optionally specify `sigma` (Gaussian broadening width in eV, default: 0.3).
-   - For excitation tools, pass the coordinate file path from step 3 as `molecule_coordinate_filename`. Use relative path.
+   - For excitation tools, pass the coordinate file path from step 3 as `molecule_coordinate_filename`. Use absolute path.
    - The excitation tools return excitation energies (eV and Hartree), wavelengths (nm), oscillator strengths, and transition details.
    - Pass the excitation data dict (from step 5 excitation tools) to `td_dft_absorption_spectrum` to generate the continuous spectrum.
    - When generating the absorption spectrum, the `output_file` parameter (containing the plot) **MUST be saved inside the workspace directory** created in step 1.
