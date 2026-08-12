@@ -5,10 +5,9 @@ PySCF-based TD-DFT excitation energy and oscillator strength computations.
 """
 
 import os
-import json
 import subprocess
 from pathlib import PosixPath
-from typing import Dict, List, Any
+from typing import Dict, Any
 from langchain_core.tools import tool
 from langchain_surf.tools.utils.hpc_func import HPCFunc
 
