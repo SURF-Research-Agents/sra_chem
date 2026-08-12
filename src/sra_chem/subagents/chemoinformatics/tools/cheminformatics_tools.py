@@ -7,7 +7,7 @@ from ase.io import write as ase_write
 from ase import Atoms
 
 from sra_chem.schemas.atomsdata import AtomsData
-from sra_chem.tools.utils import _resolve_path
+from sra_chem.subagents.chemoinformatics.tools.utils import _resolve_path
 
 
 

@@ -23,7 +23,7 @@ TOOLS = [
 ]
 
 
-def create_pyscf_ressource_estimation_agent(
+def create_pyscf_resource_estimation_agent(
     api_key: str,
     model: str = "Qwen/Qwen3.6-35B-A3B-FP8",
     temperature: float = 0.1,
