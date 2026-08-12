@@ -21,6 +21,7 @@ from sra_chem.subagents.pyscf.tools.tddft_tools import (
     td_dft_excitations_hpc,
     td_dft_excitations_local,
 )
+from sra_chem.subagents.pyscf.tools.geometry_optimization_tools import optimize_geometry_local, optimize_geometry_hpc
 
 from sra_chem.subagents.pyscf.prompt.pyscf_agent_prompt import pyscf_agent_prompt
 
@@ -33,6 +34,8 @@ TOOLS = [
     td_dft_absorption_spectrum,
     td_dft_excitations_hpc,
     td_dft_excitations_local,
+    optimize_geometry_local,
+    optimize_geometry_hpc,
 ]
 
 
@@ -44,9 +47,6 @@ def create_pyscf_agent(
     timeout: int = 30,
 ) -> Any:
     """Create a compiled LangGraph subagent for quantum chemistry calculations.
-
-    This agent uses the same tools and skills as the ``quantum_agent`` defined
-    in ``app/app_multiagent_v2.py``.
 
     Parameters
     ----------
