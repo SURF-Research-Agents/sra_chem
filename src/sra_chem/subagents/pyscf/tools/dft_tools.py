@@ -123,7 +123,7 @@ def dft_energy_hpc(
         Common options include "sto-3g", "3-21g", "6-31g", "6-31g*",
         "cc-pvdz", "cc-pvtz", etc.
     slurm_parameters: dict, optional
-            dictionary containing the ressources required to perform 
+            dictionary containing the resources required to perform 
             the calculation. 
 
     Returns
