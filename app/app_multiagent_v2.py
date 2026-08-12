@@ -13,7 +13,7 @@ from sra_chem.tools.directory_tools import create_workspace
 
 
 from sra_chem.subagents.pyscf.pyscf_agent import create_pyscf_agent
-from sra_chem.subagents.pyscf.pyscf_ressource_estimation_agent import create_pyscf_ressource_estimation_agent
+from sra_chem.subagents.pyscf.pyscf_resource_estimation_agent import create_pyscf_resource_estimation_agent
 from sra_chem.subagents.chemoinformatics.chemoinformatics_agent import create_chemoinformatics_agent
 from sra_chem.subagents.summarization.summarization_agent import create_summarization_agent
 
@@ -58,7 +58,7 @@ summarization_agent = create_summarization_agent(
     model=model_name,
 )
 
-resource_estimation_agent = create_pyscf_ressource_estimation_agent(
+resource_estimation_agent = create_pyscf_resource_estimation_agent(
     api_key=api_key,
     model=model_name,
 )
