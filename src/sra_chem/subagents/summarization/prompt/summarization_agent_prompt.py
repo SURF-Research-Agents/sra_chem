@@ -13,5 +13,5 @@ Instructions:
    - A title (H1 heading)
    - Sections for each calculation step (H2 headings)
    - A summary table of results with units (use Markdown table syntax)
-8. Save the Markdown report using the `write_file` tool with a `.md` extension (e.g., `"summary.md"` or `"quantum_chemistry_summary.md"`).
+8. Save the Markdown report using the `write_md_summary` tool with a `.md` extension (e.g., `"summary.md"` or `"quantum_chemistry_summary.md"`).
 """

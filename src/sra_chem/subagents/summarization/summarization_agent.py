@@ -13,12 +13,11 @@ from deepagents import CompiledSubAgent
 
 from langchain_surf.chat_models.chat_willma import ChatWillma
 
-
 from sra_chem.subagents.summarization.prompt.summarization_agent_prompt import summarization_agent_prompt
-from sra_chem.tools.directory_tools import write_file
+from sra_chem.subagents.summarization.tools.write_md_summary import write_md_summary
 
 
-TOOLS = [write_file]
+TOOLS = [write_md_summary]
 
 
 def create_summarization_agent(
