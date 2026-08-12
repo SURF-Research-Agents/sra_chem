@@ -15,7 +15,6 @@ from langchain_surf.chat_models.chat_willma import ChatWillma
 
 from sra_chem.subagents.chemoinformatics.tools.cheminformatics_tools import (
     molecule_name_to_smiles,
-    smiles_to_atomsdata,
     smiles_to_coordinate_file,
 )
 from sra_chem.subagents.chemoinformatics.prompt.chemoinformatics_agent_prompt import chemoinformatic_agent_prompt
@@ -23,7 +22,6 @@ from sra_chem.subagents.chemoinformatics.prompt.chemoinformatics_agent_prompt im
 # Tools and skills matching the chemoinformatic_agent in app_multiagent_v2.py
 TOOLS = [
     molecule_name_to_smiles,
-    smiles_to_atomsdata,
     smiles_to_coordinate_file,
 ]
 
