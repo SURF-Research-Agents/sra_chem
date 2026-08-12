@@ -206,9 +206,9 @@ def estimate_simulation_resources(
         if molecule_size > 50 or complexity > 10:
             ncpus = NCPUS_PER_PART[partition]
         elif molecule_size > 20:
-            ncpus = NCPUS_PER_PART[partition]/2
+            ncpus = NCPUS_PER_PART[partition]//2
         else:
-            ncpus = NCPUS_PER_PART[partition]/4
+            ncpus = NCPUS_PER_PART[partition]//4
 
         slurm_params = {
             "partition": partition,
