@@ -193,7 +193,7 @@ def td_dft_excitations_hpc(
         Number of low-lying excited states to compute. Default is 10.
     chkfile: str, optional
         Path ot the checkpoint file of the calculation
-    slurm_parameters: dictm, optional
+    slurm_parameters: dict, optional
             dictionary containing the ressources required to perform 
             the calculation. 
 

@@ -58,7 +58,7 @@ def estimate_simulation_resources(
     method: str,
     molecule_size: int,
     basis: str = "sto-3g",
-    n_states: int = None,
+    n_states: int | None = None,
     use_hpc: bool = False,
     functional: str = "pbe",
 ) -> dict:
