@@ -56,8 +56,11 @@ quantum_chemistry_agent = {
         "name" : "quantum_agent",
         "description": "Used to perform quantum chemistry tasks such as computing the ground state energy of a molecule",
         "system_prompt": quantum_chemistry_agent_promt,
-        "tools": [hf_energy_local, hf_energy_hpc, dft_energy_hpc, dft_energy_local, td_dft_absorption_spectrum, td_dft_excitations_hpc,td_dft_excitations_local],
-        "skills": ["skills/mol-groundstate"]
+        "tools": [hf_energy_local, hf_energy_hpc, 
+                  dft_energy_hpc, dft_energy_local, 
+                  td_dft_absorption_spectrum, td_dft_excitations_hpc, 
+                  td_dft_excitations_local],
+        "skills": ["skills/mol-groundstate", "skills/mol-excitation"]
 }
 
 summarization_agent = {
