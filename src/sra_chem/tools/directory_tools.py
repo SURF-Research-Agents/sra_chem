@@ -23,3 +23,4 @@ def create_workspace() -> dict:
     new_dir = Path(os.getcwd()) / f"sra_chem_{dir_name}"
     new_dir.mkdir(exist_ok=True)
     return {"path": new_dir.resolve()}
+

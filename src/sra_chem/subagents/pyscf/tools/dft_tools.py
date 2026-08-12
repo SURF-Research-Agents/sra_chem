@@ -1,26 +1,30 @@
-"""PySCF tools for Hartree-Fock quantum chemistry calculations.
+"""PySCF tools for DFT quantum chemistry calculations.
 
 This module provides LangChain-compatible tools for running
-PySCF-based Hartree-Fock ground state energy computations.
+PySCF-based Density Functional Theory (DFT) ground state energy computations.
 """
-
 import os
 from pathlib import PosixPath
 from langchain_core.tools import tool
 from langchain_surf.tools.utils.hpc_func import HPCFunc
 
 
-def _ground_state_energy(
+def _dft_energy(
     molecule_coordinate_filename: str,
+    functional: str = "pbe",
     basis: str = "sto-3g",
 ) -> float:
-    """Compute the Hartree-Fock ground state energy of a molecule using PySCF.
+    """Compute the DFT ground state energy of a molecule using PySCF.
 
     Parameters
     ----------
     molecule_coordinate_filename : str
         Path to a file containing the molecular geometry in PySCF
         format (e.g. XYZ, Gaussian, or PySCF-native format).
+    functional : str, optional
+        Exchange-correlation functional to use. Default is "pbe".
+        Common options include "pbe", "b3lyp", "wb97x", "lda",
+        "pbesol", "hf", etc.
     basis : str, optional
         Basis set to use for the calculation. Default is "sto-3g".
         Common options include "sto-3g", "3-21g", "6-31g", "6-31g*",
@@ -29,7 +33,7 @@ def _ground_state_energy(
     Returns
     -------
     float
-        The converged Hartree-Fock ground state energy in eV.
+        The converged DFT ground state energy in eV.
 
     Raises
     ------
@@ -40,28 +44,33 @@ def _ground_state_energy(
         an error.
     """
     from pyscf import gto
-    from pyscf import scf
+    from pyscf import dft
 
     mol = gto.M(atom=molecule_coordinate_filename, basis=basis)
-    rhf = scf.RHF(mol)
-    return rhf.kernel()
+    uhf = dft.UKS(mol, xc=functional)
+    return uhf.kernel()
 
 
 @tool
-def hf_energy_local(
+def dft_energy_local(
     molecule_coordinate_filename: str,
+    functional: str = "pbe",
     basis: str = "sto-3g",
 ) -> float:
-    """Compute the Hartree-Fock ground state energy locally using PySCF.
+    """Compute the DFT ground state energy locally using PySCF.
 
-    This is a wrapper around the internal ``_ground_state_energy`` function
-    that exposes the calculation as a LangChain tool for local execution.
+    This is a wrapper around the internal ``_dft_energy`` function
+    that exposes the DFT calculation as a LangChain tool for local execution.
 
     Parameters
     ----------
     molecule_coordinate_filename : str
         Path to a file containing the molecular geometry in PySCF
         format (e.g. XYZ, Gaussian, or PySCF-native format).
+    functional : str, optional
+        Exchange-correlation functional to use. Default is "pbe".
+        Common options include "pbe", "b3lyp", "wb97x", "lda",
+        "pbesol", "hf", etc.
     basis : str, optional
         Basis set to use for the calculation. Default is "sto-3g".
         Common options include "sto-3g", "3-21g", "6-31g", "6-31g*",
@@ -70,7 +79,7 @@ def hf_energy_local(
     Returns
     -------
     float
-        The converged Hartree-Fock ground state energy in eV.
+        The converged DFT ground state energy in eV.
 
     Raises
     ------
@@ -80,21 +89,22 @@ def hf_energy_local(
         If the PySCF calculation fails to converge or encounters
         an error.
     """
-    return _ground_state_energy(molecule_coordinate_filename, basis)
+    return _dft_energy(molecule_coordinate_filename, functional, basis)
 
 
 @tool
-def hf_energy_hpc(
+def dft_energy_hpc(
     molecule_coordinate_filename: str,
     workspace_path: PosixPath,
+    functional: str = "pbe",
     basis: str = "sto-3g",
     slurm_parameters: dict | None = None
 ) -> float:
-    """Compute the Hartree-Fock ground state energy on a SLURM cluster.
+    """Compute the DFT ground state energy on a SLURM cluster.
 
-    This is a wrapper around the internal ``_ground_state_energy`` function
-    that submits the calculation to a SLURM HPC cluster (Snellius) via
-    the LangChain HPC tool decorator.
+    This is a wrapper around the internal ``_dft_energy`` function
+    that submits the DFT calculation to a SLURM HPC cluster (Snellius)
+    via the LangChain HPC tool decorator.
 
     Parameters
     ----------
@@ -104,18 +114,22 @@ def hf_energy_hpc(
     workspace_path : PosixPath
         Path to the workspace directory used for HPC job execution
         and data storage on the SLURM cluster.
+    functional : str, optional
+        Exchange-correlation functional to use. Default is "pbe".
+        Common options include "pbe", "b3lyp", "wb97x", "lda",
+        "pbesol", "hf", etc.
     basis : str, optional
         Basis set to use for the calculation. Default is "sto-3g".
         Common options include "sto-3g", "3-21g", "6-31g", "6-31g*",
         "cc-pvdz", "cc-pvtz", etc.
     slurm_parameters: dict, optional
-        dictionary containing the ressources required to perform 
-        the calculation. 
+            dictionary containing the resources required to perform 
+            the calculation. 
 
     Returns
     -------
     float
-        The converged Hartree-Fock ground state energy in eV.
+        The converged DFT ground state energy in eV.
 
     Raises
     ------
@@ -139,10 +153,10 @@ def hf_energy_hpc(
         'bucketname': workspace_path.name
     }
 
-    hpc_func = HPCFunc(_ground_state_energy,
+    hpc_func = HPCFunc(_dft_energy,
                   slurm_data=slurm_data,
                   os_data=os_data,
                   root_dir=str(workspace_path)
                   )
     hpc_local_molecule_coordinate_filename = str(PosixPath(molecule_coordinate_filename).relative_to(workspace_path))
-    return hpc_func(hpc_local_molecule_coordinate_filename, basis)
+    return hpc_func(hpc_local_molecule_coordinate_filename, functional, basis)

@@ -5,10 +5,9 @@ PySCF-based TD-DFT excitation energy and oscillator strength computations.
 """
 
 import os
-import json
 import subprocess
 from pathlib import PosixPath
-from typing import Dict, List, Any
+from typing import Dict, Any
 from langchain_core.tools import tool
 from langchain_surf.tools.utils.hpc_func import HPCFunc
 
@@ -38,7 +37,7 @@ def _td_dft_excitations(
     n_states : int, optional
         Number of low-lying excited states to compute. Default is 10.
     chkfile: str, optional
-        Path ot the checkpoint file of the calculation
+        Path to the checkpoint file of the calculation
 
     Returns
     -------
@@ -137,7 +136,7 @@ def td_dft_excitations_local(
     n_states : int, optional
         Number of low-lying excited states to compute. Default is 10.
     chkfile: str, optional
-        Path ot the checkpoint file of the calculation
+        Path to the checkpoint file of the calculation
 
     Returns
     -------
@@ -192,9 +191,9 @@ def td_dft_excitations_hpc(
     n_states : int, optional
         Number of low-lying excited states to compute. Default is 10.
     chkfile: str, optional
-        Path ot the checkpoint file of the calculation
+        Path to the checkpoint file of the calculation
     slurm_parameters: dict, optional
-            dictionary containing the ressources required to perform 
+            dictionary containing the resources required to perform 
             the calculation. 
 
     Returns
