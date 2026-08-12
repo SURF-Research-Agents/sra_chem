@@ -3,7 +3,6 @@
 This module provides LangChain-compatible tools for running
 PySCF-based Density Functional Theory (DFT) ground state energy computations.
 """
-
 import os
 from pathlib import PosixPath
 from langchain_core.tools import tool
@@ -99,6 +98,7 @@ def dft_energy_hpc(
     workspace_path: PosixPath,
     functional: str = "pbe",
     basis: str = "sto-3g",
+    slurm_parameters: dict | None = None
 ) -> float:
     """Compute the DFT ground state energy on a SLURM cluster.
 
@@ -122,6 +122,9 @@ def dft_energy_hpc(
         Basis set to use for the calculation. Default is "sto-3g".
         Common options include "sto-3g", "3-21g", "6-31g", "6-31g*",
         "cc-pvdz", "cc-pvtz", etc.
+    slurm_parameters: dict, optional
+            dictionary containing the ressources required to perform 
+            the calculation. 
 
     Returns
     -------
@@ -142,6 +145,9 @@ def dft_energy_hpc(
         "user_name": os.getenv('SLURM_USER'),
         "slurm_jwt": os.getenv('SLURM_JWT'),
     }
+
+    if slurm_parameters is not None:
+        slurm_data.update(slurm_parameters)
 
     os_data = {
         'bucketname': workspace_path.name

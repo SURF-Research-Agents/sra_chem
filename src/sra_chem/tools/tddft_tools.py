@@ -164,7 +164,8 @@ def td_dft_excitations_hpc(
     functional: str = "b3lyp",
     basis: str = "631g",
     n_states: int = 10,
-    chkfile: str = 'pyscf.chk'
+    chkfile: str = 'pyscf.chk',
+    slurm_parameters: dict | None = None
 ) -> Dict[str, Any]:
     """Compute TD-DFT excitation energies and oscillator strengths on a SLURM cluster.
 
@@ -192,6 +193,9 @@ def td_dft_excitations_hpc(
         Number of low-lying excited states to compute. Default is 10.
     chkfile: str, optional
         Path ot the checkpoint file of the calculation
+    slurm_parameters: dict, optional
+            dictionary containing the ressources required to perform 
+            the calculation. 
 
     Returns
     -------
@@ -214,6 +218,9 @@ def td_dft_excitations_hpc(
         "user_name": os.getenv('SLURM_USER'),
         "slurm_jwt": os.getenv('SLURM_JWT'),
     }
+
+    if slurm_parameters is not None:
+        slurm_data.update(slurm_parameters)
 
     os_data = {
         'bucketname': workspace_path.name
