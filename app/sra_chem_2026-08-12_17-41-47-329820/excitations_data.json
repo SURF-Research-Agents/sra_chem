@@ -1,0 +1,30 @@
+{
+    "hf_energy": -232.19864323,
+    "n_states": 3,
+    "excitations": [
+        {
+            "state": 1,
+            "energy_ev": 5.59,
+            "energy_ha": 0.20535,
+            "wavelength_nm": 221.72,
+            "oscillator_strength": 0.0,
+            "transition": "S1"
+        },
+        {
+            "state": 2,
+            "energy_ev": 6.44,
+            "energy_ha": 0.23667,
+            "wavelength_nm": 192.43,
+            "oscillator_strength": 0.0,
+            "transition": "S2"
+        },
+        {
+            "state": 3,
+            "energy_ev": 7.48,
+            "energy_ha": 0.27486,
+            "wavelength_nm": 165.71,
+            "oscillator_strength": 0.587,
+            "transition": "S3"
+        }
+    ]
+}

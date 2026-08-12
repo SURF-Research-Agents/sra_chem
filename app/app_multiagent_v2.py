@@ -63,7 +63,6 @@ resource_estimation_agent = create_pyscf_resource_estimation_agent(
     model=model_name,
 )
 
-
 agent = create_deep_agent(model,
                      subagents=[chemoinformatic_agent,
                                 quantum_chemistry_agent,
