@@ -8,18 +8,16 @@ from langgraph.checkpoint.memory import InMemorySaver
 
 from langchain_surf.chat_models.chat_willma import ChatWillma
 from langchain_ui.app.multiagent_app_factory import create_app
-from sra_chem.tools.cheminformatics_tools import (
-    molecule_name_to_smiles,
-    smiles_to_atomsdata,
-    smiles_to_coordinate_file
-)
 from sra_chem.tools.directory_tools import create_workspace
-from sra_chem.tools.hf_tools import hf_energy_local, hf_energy_hpc
-from sra_chem.tools.dft_tools import dft_energy_local, dft_energy_hpc
-from sra_chem.tools.tddft_tools import td_dft_absorption_spectrum, td_dft_excitations_hpc,td_dft_excitations_local
-from sra_chem.tools.resource_estimation_tools import estimate_simulation_resources
 
-from sra_chem.prompts.multiagent_prompt import multi_agent_prompt, chemoinformatic_agent_prompt, quantum_chemistry_agent_promt, resource_estimation_agent_prompt, summarization_agent_prompt
+
+
+from sra_chem.subagents.pyscf.pyscf_agent import create_pyscf_agent
+from sra_chem.subagents.pyscf.pyscf_ressource_estimation_agent import create_pyscf_ressource_estimation_agent
+from sra_chem.subagents.chemoinformatics.chemoinformatics_agent import create_chemoinformatics_agent
+from sra_chem.subagents.summarization.summarization_agent import create_summarization_agent
+
+from sra_chem.prompts.multiagent_prompt import multi_agent_prompt
 
 logging.basicConfig(level=logging.INFO)
 
@@ -44,39 +42,26 @@ model = ChatWillma(
     api_key=api_key,
 )
 
-chemoinformatic_agent = {
-        "name" : "chemoinformatic_agent",
-        "description": "Used to perform chemoinformatic tasks such as converting a molecule name into a smiles or a smiles into coordinates",
-        "system_prompt": chemoinformatic_agent_prompt,
-        "tools": [molecule_name_to_smiles, smiles_to_atomsdata, smiles_to_coordinate_file],
-        "skills": ["skills/mol-xyz"]
-}
+chemoinformatic_agent = create_chemoinformatics_agent(
+    api_key=api_key,
+    model=model_name,
+)
 
-quantum_chemistry_agent = {
-        "name" : "quantum_agent",
-        "description": "Used to perform quantum chemistry tasks such as computing the ground state energy of a molecule",
-        "system_prompt": quantum_chemistry_agent_promt,
-        "tools": [hf_energy_local, hf_energy_hpc, 
-                  dft_energy_hpc, dft_energy_local, 
-                  td_dft_absorption_spectrum, td_dft_excitations_hpc, 
-                  td_dft_excitations_local],
-        "skills": ["skills/mol-groundstate", 
-                   "skills/mol-excitation"]
-}
 
-summarization_agent = {
-        "name" : "summarization_agent",
-        "description": "Used to summarize computational chemistry results from the chemoinformatics and quantum chemistry agents into a clear, structured report",
-        "system_prompt": summarization_agent_prompt,
-        "tools": []
-}
+quantum_chemistry_agent = create_pyscf_agent(
+    api_key=api_key,
+    model=model_name,
+)
 
-resource_estimation_agent = {
-        "name": "resource_estimation_agent",
-        "description": "Used to estimate compute time, memory, and HPC job parameters (SLURM resources) for quantum chemistry simulations before running them",
-        "system_prompt": resource_estimation_agent_prompt,
-        "tools": [estimate_simulation_resources]
-}
+summarization_agent = create_summarization_agent(
+    api_key=api_key,
+    model=model_name,
+)
+
+resource_estimation_agent = create_pyscf_ressource_estimation_agent(
+    api_key=api_key,
+    model=model_name,
+)
 
 
 agent = create_deep_agent(model,
