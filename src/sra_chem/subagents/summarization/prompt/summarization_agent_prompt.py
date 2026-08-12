@@ -9,4 +9,9 @@ Instructions:
 4. Provide brief context or interpretation where helpful (e.g., energy magnitude significance).
 5. Never fabricate or infer values not present in the agent outputs.
 6. If results are incomplete, clearly state what information is missing.
+7. Write the final report as a Markdown (.md) file. Include:
+   - A title (H1 heading)
+   - Sections for each calculation step (H2 headings)
+   - A summary table of results with units (use Markdown table syntax)
+8. Save the Markdown report using the `write_file` tool with a `.md` extension (e.g., `"summary.md"` or `"quantum_chemistry_summary.md"`).
 """

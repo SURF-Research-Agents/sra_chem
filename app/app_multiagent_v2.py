@@ -10,8 +10,6 @@ from langchain_surf.chat_models.chat_willma import ChatWillma
 from langchain_ui.app.multiagent_app_factory import create_app
 from sra_chem.tools.directory_tools import create_workspace
 
-
-
 from sra_chem.subagents.pyscf.pyscf_agent import create_pyscf_agent
 from sra_chem.subagents.pyscf.pyscf_resource_estimation_agent import create_pyscf_resource_estimation_agent
 from sra_chem.subagents.chemoinformatics.chemoinformatics_agent import create_chemoinformatics_agent
@@ -27,7 +25,6 @@ model_name = 'Qwen/Qwen3.6-35B-A3B-FP8'
 # model_name = 'Qwen/Qwen3.6-27B-FP8'
 # model_name = 'mistralai/Mistral-Small-3.2-24B-Instruct-2506'
 # model_name = 'openai/gpt-oss-120b'
-
 
 skills_path = "/Users/renau001/Documents/projects/ai/SRA/sra_chem/src/sra_chem/"
 backend = FilesystemBackend(root_dir=skills_path, virtual_mode=False)

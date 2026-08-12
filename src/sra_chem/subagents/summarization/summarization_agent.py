@@ -15,9 +15,10 @@ from langchain_surf.chat_models.chat_willma import ChatWillma
 
 
 from sra_chem.subagents.summarization.prompt.summarization_agent_prompt import summarization_agent_prompt
+from sra_chem.tools.directory_tools import write_file
 
 
-TOOLS = []
+TOOLS = [write_file]
 
 
 def create_summarization_agent(
